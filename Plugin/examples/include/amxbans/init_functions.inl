@@ -12,27 +12,22 @@
 #endif
 #define _init_functions_included
 
-#include <amxmodx>
-#include <amxmisc>
-#include <sqlx>
-#include <time>
 /*********************  Banmod online  ********************/
 public banmod_online(id)
 {
 	// This is a new way of getting the port number
 	new ip_port[100]
-	get_pcvar_string(pcvar_serverip,ip_port,99)
+	get_cvarptr_string(pcvar_serverip,ip_port,99)
 	if(contain(ip_port,":") == -1) {
 		get_user_ip(0, ip_port, 99, 0) // Takes in the whole IP:port string.. (0 is always the server)
 	}
 	strtok(ip_port, g_ip, 90, g_port, 9, ':')
 
-	if ( get_pcvar_num(pcvar_debug) >= 1 )
+	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 	{
 		server_print("[AMXBans] The server IP:PORT is: %s:%s", g_ip, g_port)
 		log_amx("[AMXBans] The server IP:PORT is: %s:%s", g_ip, g_port)
 	}
-	new pquery[1024]
 	formatex(pquery, charsmax(pquery), "SELECT `motd_delay` FROM `%s%s` WHERE address = '%s:%s'", g_dbPrefix, tbl_serverinfo,g_ip,g_port)
 	
 	new data[1]

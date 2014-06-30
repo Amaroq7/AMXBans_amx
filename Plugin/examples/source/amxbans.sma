@@ -199,7 +199,7 @@ public event_new_round()
 	{
 		if(g_nextround_kick[i])
 		{
-			if ( get_pcvar_num(pcvar_debug) >= 1 )
+			if ( get_cvarptr_num(pcvar_debug) >= 1 )
 				log_amx("[AMXBans] New Round Kick ID: <%d> | bid:%d",i,g_nextround_kick_bid[i])
 			
 			if(!is_user_connected(i) || is_user_bot(i)) continue
@@ -223,17 +223,6 @@ public event_new_round()
 			//
 		}
 	}
-}
-/*********  Error handler  ***************/
-MySqlX_ThreadError(szQuery[], error[], errnum, failstate, id) {
-	if (failstate == TQUERY_CONNECT_FAILED) {
-		log_amx(_T("[AMXBans] Connection failed!"))
-	} else if (failstate == TQUERY_QUERY_FAILED) {
-		log_amx(_T("[AMXBans] Query failed!"))
-	}
-	log_amx(_T("[AMXBans] Threaded Query Error, Place: %d"), id)
-	log_amx(_T("[AMXBans] Message: %s (%d)"), error, errnum)
-	log_amx(_T("[AMXBans] Query statement: %s"), szQuery)
 }
 /*********    client functions     ************/
 public client_authorized(id) {
