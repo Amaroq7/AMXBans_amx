@@ -1,4 +1,4 @@
-/* AMX Mod X script.
+/* AMX Mod script.
 *   Admin Base Plugin
 *
 * by the AMX Mod X Development Team
@@ -38,14 +38,7 @@
 *  Rev 2010/04/13
 */
 
-#include <amxmodx>
-#include <amxmisc>
-#include <sqlx>
-
 new AdminCount;
-
-new PLUGINNAME[] 	= "AMXBans Core"
-new PLUGINVERSION[] 	= "6.0.3"
 
 #define ADMIN_LOOKUP	(1<<0)
 #define ADMIN_NORMAL	(1<<1)
@@ -82,8 +75,6 @@ new bool:g_bSqlInitialized
 
 public plugin_init()
 {
-	register_plugin(PLUGINNAME, PLUGINVERSION, "HLXBans Dev Team")
-
 	register_dictionary("admin.txt")
 	register_dictionary("common.txt")
 	amx_mode=register_cvar("amx_mode", "1")
