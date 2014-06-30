@@ -63,12 +63,6 @@ new Array:g_AdminUseStaticBantime
 
 //multi forward handles
 new bool:g_isAdmin[33]
-enum MFHANDLE_TYPES {
-	Amxbans_Sql_Initialized=0,
-	Admin_Connect,
-	Admin_Disconnect
-}
-new MFHandle[MFHANDLE_TYPES]
 
 new Handle:info
 new bool:g_bSqlInitialized
@@ -133,13 +127,7 @@ public client_connect(id)
 }
 public plugin_cfg() {
 	//fixx to be sure cfgs are loaded
-	create_forwards()
 	set_task(0.1,"delayed_plugin_cfg")
-}
-create_forwards() {
-	MFHandle[Amxbans_Sql_Initialized]=CreateMultiForward("amxbans_sql_initialized",ET_IGNORE,FP_CELL,FP_STRING)
-	MFHandle[Admin_Connect]=CreateMultiForward("amxbans_admin_connect",ET_IGNORE,FP_CELL)
-	MFHandle[Admin_Disconnect]=CreateMultiForward("amxbans_admin_disconnect",ET_IGNORE,FP_CELL)
 }
 public delayed_plugin_cfg()
 {
@@ -304,11 +292,6 @@ public adminSql()
 			accessUser(pv, name)
 		}
 		
-		if(!g_bSqlInitialized)
-		{
-			new ret
-			ExecuteForward(MFHandle[Amxbans_Sql_Initialized],ret,info,g_dbPrefix)
-		}
 		g_bSqlInitialized=true 
 		
 		return PLUGIN_HANDLED
@@ -392,11 +375,6 @@ public adminSql()
 	SQL_FreeHandle(query)
 	SQL_FreeHandle(sql)
 	
-	
-	if(!g_bSqlInitialized) {
-		new ret
-		ExecuteForward(MFHandle[Amxbans_Sql_Initialized],ret,info,g_dbPrefix)
-	}
 	g_bSqlInitialized=true
 	
 	new players[32], num, pv
@@ -537,8 +515,6 @@ getAccess(id, name[], authid[], ip[], password[])
 			get_flags(Access, sflags, 31)
 			set_user_flags(id, Access)
 			
-			new ret
-			if(!g_isAdmin[id]) ExecuteForward(MFHandle[Admin_Connect],ret,id)
 			g_isAdmin[id]=true
 			
 			log_amx("Login: ^"%s<%d><%s><>^" became an admin (account ^"%s^") (access ^"%s^") (address ^"%s^") (nick ^"%s^") (static %d)", \
@@ -557,8 +533,6 @@ getAccess(id, name[], authid[], ip[], password[])
 				new sflags[32]
 				get_flags(Access, sflags, 31)
 				
-				new ret
-				if(!g_isAdmin[id]) ExecuteForward(MFHandle[Admin_Connect],ret,id)
 				g_isAdmin[id]=true
 				
 				log_amx("Login: ^"%s<%d><%s><>^" became an admin (account ^"%s^") (access ^"%s^") (address ^"%s^") (nick ^"%s^") (static %d)", \
@@ -680,10 +654,6 @@ public client_infochanged(id)
 	return PLUGIN_CONTINUE
 }
 public client_disconnect(id) {
-	if(g_isAdmin[id]) {
-		new ret
-		ExecuteForward(MFHandle[Admin_Disconnect],ret,id)
-	}
 	g_isAdmin[id]=false
 }
 public ackSignal(id)
