@@ -40,6 +40,8 @@
 
 new AdminCount;
 
+#define MAX_ADMINS 128
+
 #define ADMIN_LOOKUP	(1<<0)
 #define ADMIN_NORMAL	(1<<1)
 #define ADMIN_STEAM	(1<<2)
@@ -47,7 +49,6 @@ new AdminCount;
 #define ADMIN_NAME	(1<<4)
 
 new g_cmdLoopback[16]
-new bool:g_CaseSensitiveName[33];
 
 // pcvars
 new amx_mode;
@@ -58,14 +59,32 @@ new amx_default_access;
 new pcvarip,pcvarprefix,pcvaradminsfile
 new g_ServerAddr[100],g_dbPrefix[32],g_AdminsFromFile
 new g_szAdminNick[33][32],g_iAdminUseStaticBantime[33]
-new Array:g_AdminNick
-new Array:g_AdminUseStaticBantime
+new g_AdminNick[MAX_ADMINS][32];
+new g_AdminUseStaticBantime[MAX_ADMINS];
 
 //multi forward handles
 new bool:g_isAdmin[33]
 
 new Handle:info
 new bool:g_bSqlInitialized
+
+enum AdminProp
+{
+	AdminProp_Auth = 0,
+	AdminProp_Password,
+	AdminProp_Access,
+	AdminProp_Flags
+};
+
+enum Field
+{
+	Name[64],
+	Password[64],
+	Access,
+	Flags
+};
+
+new g_szAdmin[MAX_ADMINS][Field]
 
 public plugin_init()
 {
@@ -94,9 +113,6 @@ public plugin_init()
 	pcvarip=register_cvar("amxbans_server_address","")
 	pcvarprefix=register_cvar("amx_sql_prefix", "amx")
 	pcvaradminsfile=register_cvar("amxbans_use_admins_file","0")
-	
-	g_AdminNick=ArrayCreate(32,32)
-	g_AdminUseStaticBantime=ArrayCreate(1,32)
 //
 	register_cvar("amx_sql_host", "127.0.0.1")
 	register_cvar("amx_sql_user", "root")
@@ -107,7 +123,7 @@ public plugin_init()
 	register_concmd("amx_reloadadmins", "cmdReload", ADMIN_CFG)
 	//register_concmd("amx_addadmin", "addadminfn", ADMIN_RCON, "<playername|auth> <accessflags> [password] [authtype] - add specified player as an admin to users.ini")
 
-	format(g_cmdLoopback, 15, "amxauth%c%c%c%c", random_num('A', 'Z'), random_num('A', 'Z'), random_num('A', 'Z'), random_num('A', 'Z'))
+	formatex(g_cmdLoopback, 15, "amxauth%c%c%c%c", random_num('A', 'Z'), random_num('A', 'Z'), random_num('A', 'Z'), random_num('A', 'Z'))
 
 	register_clcmd(g_cmdLoopback, "ackSignal")
 
@@ -120,10 +136,6 @@ public plugin_init()
 	server_cmd("exec %s/sql.cfg", configsDir)
 	//server_cmd("exec %s/amxbans.cfg", configsDir)
 
-}
-public client_connect(id)
-{
-	g_CaseSensitiveName[id] = false;
 }
 public plugin_cfg() {
 	//fixx to be sure cfgs are loaded
@@ -142,7 +154,7 @@ public delayed_plugin_cfg()
 	if(strlen(g_ServerAddr) < 9) {
 		new ip[32]
 		get_user_ip(0,ip,31)
-		formatex(g_ServerAddr,charsmax(g_ServerAddr),"%s",ip)
+		formatex(g_ServerAddr,charsmax(g_ServerAddr),ip)
 	}
 	if(get_cvar_num("amxbans_debug") >= 1) server_print("[AMXBans] plugin_cfg: ip %s / prefix %s",g_ServerAddr,g_dbPrefix)
 	
@@ -189,65 +201,98 @@ public delayed_load()
 
 loadSettings(szFilename[])
 {
-	new File=fopen(szFilename,"r");
+	new Text[512];
+	new Flags[32];
+	new Access[32]
+	new AuthData[44];
+	new Password[32];
+	new Name[32];
+	new Static[2];
 	
-	if (File)
+	new TextLen;
+		
+	for(new i=0;read_file(szFilename, i, Text, charsmax(Text), TextLen);i++)
 	{
-		new Text[512];
-		new Flags[32];
-		new Access[32]
-		new AuthData[44];
-		new Password[32];
-		new Name[32];
-		new Static[2];
-		
-		while (!feof(File))
+		trim(Text);
+			
+		// comment
+		if (Text[0]==';') 
 		{
-			fgets(File,Text,sizeof(Text)-1);
-			
-			trim(Text);
-			
-			// comment
-			if (Text[0]==';') 
-			{
-				continue;
-			}
-			
-			Flags[0]=0;
-			Access[0]=0;
-			AuthData[0]=0;
-			Password[0]=0;
-			Name[0] = 0;
-			Static[0] = 0;
-			
-			// not enough parameters
-			if (parse(Text, AuthData, charsmax(AuthData), Password, charsmax(Password), Access, charsmax(Access), Flags, charsmax(Flags), Name, charsmax(Name), Static, charsmax(Static)) < 2)
-			{
-				continue;
-			}
-			
-			admins_push(AuthData,Password,read_flags(Access),read_flags(Flags));
-			ArrayPushString(g_AdminNick, Name);
-			ArrayPushCell(g_AdminUseStaticBantime, str_to_num(Static));
-			
-			AdminCount++;
+			continue;
 		}
-		
-		fclose(File);
+			
+		Flags[0]=0;
+		Access[0]=0;
+		AuthData[0]=0;
+		Password[0]=0;
+		Name[0] = 0;
+		Static[0] = 0;
+			
+		// not enough parameters
+		if (parse(Text, AuthData, charsmax(AuthData), Password, charsmax(Password), Access, charsmax(Access), Flags, charsmax(Flags), Name, charsmax(Name), Static, charsmax(Static)) < 2)
+		{
+			continue;
+		}
+			
+		admins_push(AdminCount,AuthData,Password,read_flags(Access),read_flags(Flags));
+		formatex(g_AdminNick[AdminCount], 31, Name);
+		g_AdminUseStaticBantime[AdminCount] = str_to_num(Static));
+			
+		AdminCount++;
 	}
 
 	if (AdminCount == 1)
 	{
-		server_print("[AMXBans] %L", LANG_SERVER, "LOADED_ADMIN");
+		server_print("[AMXBans] %s", _T("Loaded 1 admin from file"));
 	}
 	else
 	{
-		server_print("[AMXBans] %L", LANG_SERVER, "LOADED_ADMINS", AdminCount);
+		server_print("[AMXBans] %s", _T("Loaded %d admins from file"), AdminCount);
 	}
 	
 	return 1;
 }
 
+admins_push(pos, authdata[], password[], access, flags)
+{
+	if(pos >= MAX_ADMINS)
+		return;  //Later it'll be information about increasing MAX_ADMINS define
+	formatex(g_szAdmin[pos][Name], 63, authdata);
+	formatex(g_szAdmin[pos][Password], 63, password);
+	g_szAdmin[pos][Access] = access;
+	g_szAdmin[pos][Flags] = flags;
+}
+
+admins_flush()
+{
+	for(new i=0;i<MAX_ADMINS;i++)
+	{
+		g_szAdmin[i][Name] = 0;
+		g_szAdmin[i][Password] = 0;
+		g_szAdmin[i][Access] = 0;
+		g_szAdmin[i][Flags] = 0;
+	}
+}
+
+stock admins_lookup(pos, AdminProp:prop, auth[]="", len=0)
+{
+	if(pos >= MAX_ADMINS)
+		return;  //Later it'll be information about increasing MAX_ADMINS define
+		
+	if(prop == AdminProp_Access)
+		return g_szAdmin[pos][Access];
+		
+	else if(prop == AdminProp_Auth)
+		formatex(auth, len, g_szAdmin[pos][Name]);
+		
+	else if(prop == AdminProp_Password)
+		formatex(auth, len, g_szAdmin[pos][Password]);
+		
+	else if(prop == AdminProp_Flags)
+		return g_szAdmin[pos][Flags];
+		
+	return 0;
+}
 
 public adminSql()
 {
@@ -255,16 +300,22 @@ public adminSql()
 	AdminCount = 0;
 	admins_flush();
 	
-	SQL_SetAffinity("mysql")
-	info = SQL_MakeStdTuple()
-	new Handle:sql = SQL_Connect(info, errno, error, 127)
+	new host[64], user[32], pass[32], db[128];
+	
+	get_cvar_string("amx_sql_host", host, 63);
+	get_cvar_string("amx_sql_user", user, 31);
+	get_cvar_string("amx_sql_pass", pass, 31);
+	get_cvar_string("amx_sql_type", set_type, 11);
+	get_cvar_string("amx_sql_db", db, 127);
+	
+	new sql = mysql_connect(host, user, pass, db, error, charsmax(error))
 	
 	get_cvar_string("amx_sql_table", table, 31)	
 	
 	//sql error or amxbans_use_admins_file == 1
-	if (sql == Empty_Handle || g_AdminsFromFile == 1)
+	if (!sql || g_AdminsFromFile == 1)
 	{
-		if(!g_AdminsFromFile) server_print("[AMXBans] %L", LANG_SERVER, "SQL_CANT_CON", error)
+		if(!g_AdminsFromFile) server_print("[AMXBans] %s", _T("SQL error: can't connect: '%s'"), error)
 		
 		//backup to users.ini
 		new configsDir[64]
@@ -289,35 +340,23 @@ public adminSql()
 	}
 	if(g_AdminsFromFile > 1) return PLUGIN_HANDLED
 	
-	ArrayClear(g_AdminNick)
-	ArrayClear(g_AdminUseStaticBantime)
-	
-	new Handle:query
+	for(new i=0;i<MAX_ADMINS;i++)
+	{
+		g_AdminNick[i] = 0;
+		g_AdminUseStaticBantime[i] = 0;
+	}
 	
 //amxbans	
-	new pquery[1024]
-	
-	formatex(pquery,1023,"SELECT aa.steamid,aa.password,aa.access,aa.flags,aa.nickname,ads.custom_flags,ads.use_static_bantime \
+
+	new query = mysql_query(sql, pquery, "SELECT aa.steamid,aa.password,aa.access,aa.flags,aa.nickname,ads.custom_flags,ads.use_static_bantime \
 		FROM %s_amxadmins as aa, %s_admins_servers as ads, %s_serverinfo as si \
 		WHERE ((ads.admin_id=aa.id) AND (ads.server_id=si.id) AND \
 		((aa.days=0) OR (aa.expired>UNIX_TIMESTAMP(NOW()))) AND (si.address='%s'))", g_dbPrefix, g_dbPrefix, g_dbPrefix, g_ServerAddr)
-	
-	query = SQL_PrepareQuery(sql,pquery)
-	
-	SQL_Execute(query)
+		
 //
 	
-	if(SQL_NumRows(query)) {
-		/** do this incase people change the query order and forget to modify below */
-		new qcolAuth = SQL_FieldNameToNum(query, "steamid")
-		new qcolPass = SQL_FieldNameToNum(query, "password")
-		new qcolAccess = SQL_FieldNameToNum(query, "access")
-		new qcolFlags = SQL_FieldNameToNum(query, "flags")
-		new qcolNick = SQL_FieldNameToNum(query, "nickname")
-		new qcolCustom = SQL_FieldNameToNum(query, "custom_flags")
-		new qcolStatic = SQL_FieldNameToNum(query, "use_static_bantime")
-	
-	
+	if(mysql_num_rows(query))
+	{
 		new AuthData[44];
 		new Password[44];
 		new Access[32];
@@ -326,45 +365,42 @@ public adminSql()
 		new Static[5]
 		new iStatic
 		
-		while (SQL_MoreResults(query))
+		while (mysql_num_rows(query))
 		{
-			SQL_ReadResult(query, qcolAuth, AuthData, sizeof(AuthData)-1);
-			SQL_ReadResult(query, qcolPass, Password, sizeof(Password)-1);
-			SQL_ReadResult(query, qcolStatic, Static, sizeof(Static)-1);
-			SQL_ReadResult(query, qcolCustom, Access, sizeof(Access)-1);
-			SQL_ReadResult(query, qcolNick, Nick, sizeof(Nick)-1);
-			SQL_ReadResult(query, qcolFlags, Flags, sizeof(Flags)-1);
+			mysql_getresult(query, "steamid", AuthData, sizeof(AuthData)-1);
+			mysql_getresult(query, "password", Password, sizeof(Password)-1);
+			mysql_getresult(query, "use_static_bantime", Static, sizeof(Static)-1);
+			mysql_getresult(query, "custom_flags", Access, sizeof(Access)-1);
+			mysql_getresult(query, "nickname", Nick, sizeof(Nick)-1);
+			mysql_getresult(query, "flags", Flags, sizeof(Flags)-1);
 			
 			//if custom access not set get the global
 			trim(Access)
-			if(equal(Access,"")) SQL_ReadResult(query, qcolAccess, Access, sizeof(Access)-1);
+			if(equal(Access,"")) mysql_getresult(query, "access", Access, sizeof(Access)-1);
 			
-			admins_push(AuthData,Password,read_flags(Access),read_flags(Flags));
+			admins_push(AdminCount,AuthData,Password,read_flags(Access),read_flags(Flags));
 			
 			//save nick
-			ArrayPushString(g_AdminNick,Nick)
+			formatex(g_AdminNick[AdminCount], 31, Nick)
 			
 			//save static bantime
 			iStatic=1
 			if(equal(Static,"no")) iStatic=0
-			ArrayPushCell(g_AdminUseStaticBantime,iStatic)
+			g_AdminUseStaticBantime[AdminCount] = iStatic
 			
 			++AdminCount;
-			SQL_NextRow(query)
+			mysql_nextrow(query)
 		}
 	}
 
 	if (AdminCount == 1)
 	{
-		server_print("[AMXBans] %L", LANG_SERVER, "SQL_LOADED_ADMIN")
+		server_print("[AMXBans] %s", _T("Loaded 1 admin from file"))
 	}
 	else
 	{
-		server_print("[AMXBans] %L", LANG_SERVER, "SQL_LOADED_ADMINS", AdminCount)
+		server_print("[AMXBans] %s", _T("Loaded %d admins from file"), AdminCount)
 	}
-	
-	SQL_FreeHandle(query)
-	SQL_FreeHandle(sql)
 	
 	g_bSqlInitialized=true
 	
@@ -379,9 +415,6 @@ public adminSql()
 	}
 	
 	return PLUGIN_HANDLED
-}
-public plugin_end() {
-	if(info != Empty_Handle) SQL_FreeHandle(info)
 }
 
 public cmdReload(id, level, cid)
@@ -398,9 +431,9 @@ public cmdReload(id, level, cid)
 	if (id != 0)
 	{
 		if (AdminCount == 1)
-			console_print(id, "[AMXBans] %L", LANG_SERVER, "SQL_LOADED_ADMIN")
+			console_print("[AMXBans] %s", _T("Loaded 1 admin from file"))
 		else
-			console_print(id, "[AMXBans] %L", LANG_SERVER, "SQL_LOADED_ADMINS", AdminCount)
+			console_print("[AMXBans] %s", _T("Loaded %d admins from file"), AdminCount)
 	}
 
 	return PLUGIN_HANDLED
@@ -411,16 +444,12 @@ getAccess(id, name[], authid[], ip[], password[])
 	new index = -1
 	new result = 0
 	
-	static Count;
 	static Flags;
 	static Access;
 	static AuthData[44];
 	static Password[32];
-	
-	g_CaseSensitiveName[id] = false;
 
-	Count=admins_num();
-	for (new i = 0; i < Count; ++i)
+	for (new i = 0; i < AdminCount; ++i)
 	{
 		Flags=admins_lookup(i,AdminProp_Flags);
 		admins_lookup(i,AdminProp_Auth,AuthData,sizeof(AuthData)-1);
@@ -453,39 +482,18 @@ getAccess(id, name[], authid[], ip[], password[])
 		} 
 		else 
 		{
-			if (Flags & FLAG_CASE_SENSITIVE)
+			if (Flags & FLAG_TAG)
 			{
-				if (Flags & FLAG_TAG)
-				{
-					if (contain(name, AuthData) != -1)
-					{
-						index = i
-						g_CaseSensitiveName[id] = true
-						break
-					}
-				}
-				else if (equal(name, AuthData))
+				if (containi(name, AuthData) != -1)
 				{
 					index = i
-					g_CaseSensitiveName[id] = true
 					break
 				}
 			}
-			else
+			else if (equali(name, AuthData))
 			{
-				if (Flags & FLAG_TAG)
-				{
-					if (containi(name, AuthData) != -1)
-					{
-						index = i
-						break
-					}
-				}
-				else if (equali(name, AuthData))
-				{
-					index = i
-					break
-				}
+				index = i
+				break
 			}
 		}
 	}
@@ -494,8 +502,8 @@ getAccess(id, name[], authid[], ip[], password[])
 	{
 		Access=admins_lookup(index,AdminProp_Access);
 //amxbans
-		ArrayGetString(g_AdminNick,index,g_szAdminNick[id],31)
-		g_iAdminUseStaticBantime[id]=ArrayGetCell(g_AdminUseStaticBantime,index)
+		formatex(g_szAdminNick[id],31,g_AdminNick[index])
+		g_iAdminUseStaticBantime[id]=g_AdminUseStaticBantime[index]
 //
 
 		if (Flags & FLAG_NOPASS)
@@ -594,7 +602,7 @@ accessUser(id, name[] = "")
 	
 	if (result & 1)
 	{
-		client_cmd(id, "echo ^"* %L^"", id, "INV_PAS")
+		client_cmd(id, "echo ^"* %s^"", _T("Invalid Password!"))
 	}
 	
 	if (result & 2)
@@ -605,12 +613,12 @@ accessUser(id, name[] = "")
 	
 	if (result & 4)
 	{
-		client_cmd(id, "echo ^"* %L^"", id, "PAS_ACC")
+		client_cmd(id, "echo ^"* %s^"", _T("Password accepted"))
 	}
 	
 	if (result & 8)
 	{
-		client_cmd(id, "echo ^"* %L^"", id, "PRIV_SET")
+		client_cmd(id, "echo ^"* %s^"", _T("Privileges set"))
 	}
 	
 	return PLUGIN_CONTINUE
@@ -628,19 +636,9 @@ public client_infochanged(id)
 	get_user_name(id, oldname, 31)
 	get_user_info(id, "name", newname, 31)
 
-	if (g_CaseSensitiveName[id])
+	if (!equali(newname, oldname))
 	{
-		if (!equal(newname, oldname))
-		{
-			accessUser(id, newname)
-		}
-	}
-	else
-	{
-		if (!equali(newname, oldname))
-		{
-			accessUser(id, newname)
-		}
+		accessUser(id, newname)
 	}
 	return PLUGIN_CONTINUE
 }
@@ -649,7 +647,7 @@ public client_disconnect(id) {
 }
 public ackSignal(id)
 {
-	server_cmd("kick #%d ^"%L^"", get_user_userid(id), id, "NO_ENTRY")
+	server_cmd("kick #%d ^"%s^"", get_user_userid(id), _T("You have no entry to the server..."))
 	return PLUGIN_HANDLED
 }
 
@@ -662,29 +660,4 @@ public client_putinserver(id)
 		return get_cvarptr_num(amx_mode) ? accessUser(id) : PLUGIN_CONTINUE
 	
 	return PLUGIN_CONTINUE
-}
-
-//natives
-public plugin_natives() {
-	register_library("AMXBansCore")
-	
-	register_native("amxbans_get_db_prefix","native_amxbans_get_prefix")
-	register_native("amxbans_get_admin_nick","native_amxbans_get_nick")
-	register_native("amxbans_get_static_bantime","native_amxbans_static_bantime")
-}
-public native_amxbans_get_prefix() {
-	new len= get_param(2)
-	set_array(1,g_dbPrefix,len)
-}
-public native_amxbans_get_nick() {
-	
-	new id = get_param(1)
-	new len= get_param(3)
-	
-	set_array(2,g_szAdminNick[id],len)
-}
-public native_amxbans_static_bantime() {
-	new id = get_param(1)
-	if(get_cvar_num("amxbans_debug") >= 3) log_amx("[AMXBans Core] Native static bantime: id: %d | result: %d",id,g_iAdminUseStaticBantime[id])
-	return g_iAdminUseStaticBantime[id]
 }
