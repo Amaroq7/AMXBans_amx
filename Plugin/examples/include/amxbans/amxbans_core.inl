@@ -135,9 +135,9 @@ public delayed_plugin_cfg()
 	//added for admins who cant read the docs
 	pause("ae", "admin.amx");
 		
-	get_pcvar_string(pcvarprefix,g_dbPrefix,charsmax(g_dbPrefix))
-	get_pcvar_string(pcvarip,g_ServerAddr,charsmax(g_ServerAddr))
-	g_AdminsFromFile=get_pcvar_num(pcvaradminsfile)
+	get_cvarptr_string(pcvarprefix,g_dbPrefix,charsmax(g_dbPrefix))
+	get_cvarptr_string(pcvarip,g_ServerAddr,charsmax(g_ServerAddr))
+	g_AdminsFromFile=get_cvarptr_num(pcvaradminsfile)
 	
 	if(strlen(g_ServerAddr) < 9) {
 		new ip[32]
@@ -542,7 +542,7 @@ getAccess(id, name[], authid[], ip[], password[])
 			}
 		}
 	}
-	else if (get_pcvar_float(amx_mode) == 2.0)
+	else if (get_cvarptr_float(amx_mode) == 2.0)
 	{
 		result |= 2
 	} 
@@ -550,7 +550,7 @@ getAccess(id, name[], authid[], ip[], password[])
 	{
 		new defaccess[32]
 		
-		get_pcvar_string(amx_default_access, defaccess, 31)
+		get_cvarptr_string(amx_default_access, defaccess, 31)
 		
 		if (!strlen(defaccess))
 		{
@@ -587,7 +587,7 @@ accessUser(id, name[] = "")
 		get_user_name(id, username, 31)
 	}
 	
-	get_pcvar_string(amx_password_field, passfield, 31)
+	get_cvarptr_string(amx_password_field, passfield, 31)
 	get_user_info(id, passfield, password, 31)
 	
 	new result = getAccess(id, username, userauthid, userip, password)
@@ -618,7 +618,7 @@ accessUser(id, name[] = "")
 
 public client_infochanged(id)
 {
-	if (!is_user_connected(id) || !get_pcvar_num(amx_mode))
+	if (!is_user_connected(id) || !get_cvarptr_num(amx_mode))
 	{
 		return PLUGIN_CONTINUE
 	}
@@ -654,12 +654,12 @@ public ackSignal(id)
 }
 
 public client_authorized(id)
-	return get_pcvar_num(amx_mode) ? accessUser(id) : PLUGIN_CONTINUE
+	return get_cvarptr_num(amx_mode) ? accessUser(id) : PLUGIN_CONTINUE
 
 public client_putinserver(id)
 {
 	if (!is_dedicated_server() && id == 1)
-		return get_pcvar_num(amx_mode) ? accessUser(id) : PLUGIN_CONTINUE
+		return get_cvarptr_num(amx_mode) ? accessUser(id) : PLUGIN_CONTINUE
 	
 	return PLUGIN_CONTINUE
 }
