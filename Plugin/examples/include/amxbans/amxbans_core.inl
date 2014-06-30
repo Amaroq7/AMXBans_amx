@@ -131,18 +131,9 @@ public plugin_cfg() {
 }
 public delayed_plugin_cfg()
 {
-	//check if amxbans plugins are the first plugins and default admin plugins are disabled
+	//disable default admin plugin
 	//added for admins who cant read the docs
-	if(find_plugin_byfile("admin.amxx") != INVALID_PLUGIN_ID) {
-		log_amx("[AMXBans] WARNING: admin.amxx plugin running! stopped.")
-		pause("acd","admin.amxx")
-	}
-	if(find_plugin_byfile("admin_sql.amxx") != INVALID_PLUGIN_ID) {
-		log_amx("[AMXBans] WARNING: admin_sql.amxx plugin running! stopped.")
-		pause("acd","admin_sql.amxx")
-	}
-	if(find_plugin_byfile("amxbans_core.amxx") != 0) log_amx("[AMXBans] WARNING: amxbans_core.amxx should be the fist entry in your plugins.ini!")
-	if(find_plugin_byfile("amxbans_main.amxx") != 1) log_amx("[AMXBans] WARNING: amxbans_main.amxx should be the second entry in your plugins.ini!")
+	pause("ae", "admin.amx");
 		
 	get_pcvar_string(pcvarprefix,g_dbPrefix,charsmax(g_dbPrefix))
 	get_pcvar_string(pcvarip,g_ServerAddr,charsmax(g_ServerAddr))
