@@ -21,15 +21,10 @@ new g_port[10];
 new bool:g_kicked_by_amxbans[33];
 new bool:g_being_banned[33];
 new bool:g_supported_game = true;
-
-//forwards
-enum MFHandles
-{
-	Ban_MotdOpen,
-	Player_Flagged,
-	Player_UnFlagged
-}
-new MFHandle[MFHandles];
+new g_iMaxPlayers;
+new pquery[1024];
+new authid[33][35],ip[33][22],reason[33][100]
+new flagged_end[33]
 
 // For hudmessages
 new g_MyMsgSync;
@@ -88,7 +83,7 @@ new pcvar_default_banreason;
 
 // SQL
 
-new Handle:g_SqlX;
+new g_SqlX;
 new g_dbPrefix[32];
 
 new Float:kick_delay = 10.0; //motd_delay from DB
@@ -107,3 +102,8 @@ new g_flagtimesnum;
 new g_HighBanMenuValues[14];
 new g_LowBanMenuValues[14];
 new g_FlagMenuValues[14];
+
+//AMXBans Freeze
+new bool:g_frozen[33]
+new pcvar_mode
+new mode
