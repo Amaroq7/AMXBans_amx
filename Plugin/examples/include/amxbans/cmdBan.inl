@@ -12,13 +12,11 @@
 #endif
 #define _cmdban_included
 
-#include <amxmodx>
-#include <sqlx>
 public cmdMenuBan(id) {
 	if(!id) return PLUGIN_HANDLED
 	
 	if(g_being_banned[g_choicePlayerId[id]]) {
-		client_print(id,print_chat,"[AMXBans] %L", LANG_PLAYER, "BLOCKING_DOUBLEBAN", g_choicePlayerName[id])
+		client_print(id,print_chat,"[AMXBans] %s", _T("Blocking doubleban from <%s>"), g_choicePlayerName[id])
 	}
 	g_being_banned[g_choicePlayerId[id]]=true
 	
@@ -33,8 +31,6 @@ public cmdMenuBan(id) {
 		g_choicePlayerId[id],g_choicePlayerName[id],g_choicePlayerAuthid[id],g_choicePlayerIp[id],g_choiceReason[id],g_choiceTime[id])
 	}
 	
-	new pquery[1024]
-	
 	if (equal(g_ban_type[id], "S")) {
 		formatex(pquery, charsmax(pquery),"SELECT player_id FROM %s%s WHERE player_id='%s' and expired=0", g_dbPrefix, tbl_bans, g_choicePlayerAuthid[id])
 		if ( get_pcvar_num(pcvar_debug) >= 2 )
@@ -45,31 +41,19 @@ public cmdMenuBan(id) {
 			log_amx("[AMXBans cmdMenuBan] Banned a player by IP/steamID")
 	}
 	
+	new query = mysql_query(g_SqlX, pquery);
 	
-	new data[3]
-	data[0] = id
-	data[1] = g_choicePlayerId[id]
-	SQL_ThreadQuery(g_SqlX, "_cmdMenuBan", pquery, data, 3)
+	_cmdMenuBan(id, query, g_choicePlayerId[id]);
 	
 	return PLUGIN_HANDLED	
 }
-public _cmdMenuBan(failstate, Handle:query, error[], errnum, data[], size)
+public _cmdMenuBan(id, query, player)
 {
-	new id = data[0]
-	new pid = data[1]
-	
 	if ( get_pcvar_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans cmdMenuBan function 2]Playerid: %d", pid)
-		
-	if (failstate) {
-		new szQuery[256]
-		SQL_GetQueryString(query,szQuery,255)
-		MySqlX_ThreadError( szQuery, error, errnum, failstate, 6 )
-		return PLUGIN_HANDLED
-	}
 	
-	if (SQL_NumResults(query)) {
-		client_print(id,print_console,"[AMXBANS] %L",id,"ALREADY_BANNED", g_choicePlayerAuthid[id], g_choicePlayerIp[id])
+	if (mysql_num_rows(query)) {
+		client_print(id,print_console,"[AMXBANS] %s (%s %s)", _T("Player is already banned."), g_choicePlayerAuthid[id], g_choicePlayerIp[id])
 		g_being_banned[id] = false
 		return PLUGIN_HANDLED
 	}
@@ -93,16 +77,11 @@ public _cmdMenuBan(failstate, Handle:query, error[], errnum, data[], size)
 	new player_nick[64]
 	mysql_escape_string(g_choicePlayerName[id],player_nick,charsmax(player_nick))
 	
-	new pquery[1024]
-	formatex(pquery, charsmax(pquery), "INSERT INTO `%s%s` (player_id,player_ip,player_nick,admin_ip,admin_id,admin_nick,ban_type,ban_reason,ban_created,ban_length,server_name,server_ip,expired) \
+	new query2 = mysql_query(g_SqlX, "INSERT INTO `%s%s` (player_id,player_ip,player_nick,admin_ip,admin_id,admin_nick,ban_type,ban_reason,ban_created,ban_length,server_name,server_ip,expired) \
 			VALUES('%s','%s','%s','%s','%s','%s','%s','%s',UNIX_TIMESTAMP(NOW()),%d,'%s','%s:%s',0)", \
 			g_dbPrefix, tbl_bans, g_choicePlayerAuthid[id],g_choicePlayerIp[id],player_nick,admin_ip,admin_steamid,admin_nick,g_ban_type[id],g_choiceReason[id],g_choiceTime[id],servername_safe,g_ip,g_port)
 	
-	
-	new data[3]
-	data[0] = id
-	data[1] = g_choicePlayerId[id]
-	SQL_ThreadQuery(g_SqlX, "insert_bandetails", pquery, data, 3)
+	insert_bandetails(id, query2, g_choicePlayerId[id])
 	
 	return PLUGIN_HANDLED
 }

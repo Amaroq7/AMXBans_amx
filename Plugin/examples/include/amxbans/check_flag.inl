@@ -12,11 +12,6 @@
 #endif
 #define _check_flag_included
 
-
-#include <amxmodx>
-#include <amxmisc>
-#include <sqlx>
-
 check_flagged(id)
 {
 	if(g_being_flagged[id])
@@ -31,36 +26,27 @@ check_flagged(id)
 	else
 		formatex(pquery, charsmax(pquery), "SELECT `fid`,`reason`,`created`,`length` FROM `%s%s` WHERE (player_id='%s' OR player_ip='%s') AND `server_ip`='%s:%s' ORDER BY `length` ASC", g_dbPrefix, tbl_flagged, authid,ip, g_ip, g_port);
 	
-	new data[1];
-	data[0] = id;
-	SQL_ThreadQuery(g_SqlX, "_check_flagged", pquery, data, 1);
+	new query = mysql_query(g_SqlX, pquery);
+	
+	_check_flagged(id, query);
 	
 	return PLUGIN_HANDLED;
 }
 
-public _check_flagged(failstate, Handle:query, error[], errnum, data[], size)
+public _check_flagged(id, query)
 {
-	new id = data[0];
-	
-	if(failstate)
-	{
-		new szQuery[256];
-		MySqlX_ThreadError(szQuery, error, errnum, failstate, 40);
-		return PLUGIN_HANDLED;
-	}
-	
-	if(!SQL_NumResults(query))
+	if(!mysql_num_rows(query))
 		return PLUGIN_HANDLED;
 	
 	new length, reason[128], created, fid, bool:flagged;
 	new cur_time = get_systime();
 	
-	while(SQL_MoreResults(query))
+	while(mysql_num_rows(query))
 	{
-		fid = SQL_ReadResult(query, 0);
-		SQL_ReadResult(query, 1, reason, charsmax(reason));
-		created = SQL_ReadResult(query, 2);
-		length = SQL_ReadResult(query, 3);
+		fid = mysql_getfield(query, 0);
+		mysql_getfield(query, 1, reason, charsmax(reason));
+		created = mysql_getfield(query, 2);
+		length = mysql_getfield(query, 3);
 		
 		if(created + length * 60 > cur_time)
 		{
@@ -71,7 +57,7 @@ public _check_flagged(failstate, Handle:query, error[], errnum, data[], size)
 			remove_flagged(fid);
 		}
 		
-		SQL_NextRow(query);
+		mysql_nextrow(query);
 	}
 	
 	if(!flagged)
@@ -84,8 +70,7 @@ public _check_flagged(failstate, Handle:query, error[], errnum, data[], size)
 	
 	if(!g_being_flagged[id])
 	{
-		new ret;
-		ExecuteForward(MFHandle[Player_Flagged], ret, id, (g_flaggedTime[id] * 60), g_flaggedReason[id]);
+		amxbans_player_flagged(id,(g_flaggedTime[id] * 60),g_flaggedReason[id])
 	}
 	g_being_flagged[id] = true;
 	return PLUGIN_HANDLED;
@@ -93,21 +78,7 @@ public _check_flagged(failstate, Handle:query, error[], errnum, data[], size)
 
 remove_flagged(fid)
 {
-	new pquery[1024];
-	formatex(pquery, charsmax(pquery), "DELETE FROM `%s%s` WHERE `fid`=%d", g_dbPrefix, tbl_flagged, fid);
-	
-	SQL_ThreadQuery(g_SqlX, "_remove_flagged", pquery);
+	mysql_query(g_SqlX, "DELETE FROM `%s%s` WHERE `fid`=%d", g_dbPrefix, tbl_flagged, fid);
 	
 	return PLUGIN_CONTINUE;
-}
-
-public _remove_flagged(failstate, Handle:query, error[], errnum, data[], size)
-{
-	if(failstate)
-	{
-		new szQuery[256];
-		MySqlX_ThreadError(szQuery, error, errnum, failstate, 41);
-	}
-	
-	return PLUGIN_HANDLED;
 }
