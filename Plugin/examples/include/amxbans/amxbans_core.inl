@@ -114,9 +114,9 @@ public plugin_init()
 	remove_user_flags(0, read_flags("z"))		// Remove 'user' flag from server rights
 
 	new configsDir[64]
-	get_configsdir(configsDir, 63)
+	get_localinfo("amx_configdir", configsDir, charsmax(configsDir))
 	
-	server_cmd("exec %s/amxx.cfg", configsDir)	// Execute main configuration file
+	server_cmd("exec %s/amx.cfg", configsDir)	// Execute main configuration file
 	server_cmd("exec %s/sql.cfg", configsDir)
 	//server_cmd("exec %s/amxbans.cfg", configsDir)
 
