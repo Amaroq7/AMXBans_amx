@@ -88,8 +88,7 @@ new g_szAdmin[MAX_ADMINS][Field]
 
 public plugin_init()
 {
-	register_dictionary("admin.txt")
-	register_dictionary("common.txt")
+	load_translations("amxbans");
 	amx_mode=register_cvar("amx_mode", "1")
 	amx_password_field=register_cvar("amx_password_field", "_pw")
 	amx_default_access=register_cvar("amx_default_access", "")
@@ -334,7 +333,11 @@ public adminSql()
 			accessUser(pv, name)
 		}
 		
-		g_bSqlInitialized=true 
+		g_bSqlInitialized=true
+		
+		new szPrefix[12];
+		get_cvarptr_string(pcvarprefix, szPrefix, 11);
+		amxbans_sql_initialized(sql, szPr);
 		
 		return PLUGIN_HANDLED
 	}
@@ -403,6 +406,10 @@ public adminSql()
 	}
 	
 	g_bSqlInitialized=true
+	
+	new szPrefix[12];
+	get_cvarptr_string(pcvarprefix, szPrefix, 11);
+	amxbans_sql_initialized(sql, szPr);
 	
 	new players[32], num, pv
 	new name[32]

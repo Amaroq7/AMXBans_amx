@@ -15,6 +15,7 @@ new const VERSION[] = "6.0.3" // This is used in the plugins name
 
 new const amxbans_version[] = "6.0.3" // This is for the DB
 
+#include <translator>
 #include <amxmod>
 #include <amxmisc>
 #include <mysql>
@@ -46,9 +47,8 @@ public plugin_init() {
 	register_plugin(PLUGIN_NAME, VERSION, AUTHOR)
 	register_cvar("amxbans_version", VERSION, FCVAR_SERVER|FCVAR_EXTDLL|FCVAR_UNLOGGED|FCVAR_SPONLY)
 	
-	register_dictionary("amxbans.txt")
-	register_dictionary("common.txt")
-	register_dictionary("time.txt")
+	load_translations("common")
+	load_translations("time")
 	
 	new szGame[20];
 	get_modname(szGame, charsmax(szGame));
@@ -60,11 +60,11 @@ public plugin_init() {
 	else
 		g_supported_game = false;
 	
-	register_clcmd("amx_banmenu", "cmdBanMenu", ADMIN_BAN, "- displays ban menu")
-	register_clcmd("amxbans_custombanreason", "setCustomBanReason", ADMIN_BAN, "- configures custom ban message")
-	register_clcmd("amx_banhistorymenu", "cmdBanhistoryMenu", ADMIN_BAN, "- displays banhistorymenu")
-	register_clcmd("amx_bandisconnectedmenu", "cmdBanDisconnectedMenu", ADMIN_BAN, "- displays bandisconnectedmenu")
-	register_clcmd("amx_flaggingmenu","cmdFlaggingMenu",ADMIN_BAN,"- displays flagging menu")
+	register_clcmd("amx_banmenu", "cmdBanMenu", ADMIN_BAN, _T("- displays ban menu"))
+	register_clcmd("amxbans_custombanreason", "setCustomBanReason", ADMIN_BAN, _T("- configures custom ban message"))
+	register_clcmd("amx_banhistorymenu", "cmdBanhistoryMenu", ADMIN_BAN, _T("- displays banhistorymenu"))
+	register_clcmd("amx_bandisconnectedmenu", "cmdBanDisconnectedMenu", ADMIN_BAN, _T("- displays bandisconnectedmenu"))
+	register_clcmd("amx_flaggingmenu","cmdFlaggingMenu",ADMIN_BAN, _T("- displays flagging menu"))
 	
 	register_srvcmd("amx_sethighbantimes", "setHighBantimes")
 	register_srvcmd("amx_setlowbantimes", "setLowBantimes")
@@ -89,51 +89,26 @@ public plugin_init() {
 	pcvar_show_prebanned_num =	register_cvar("amxbans_show_prebanned_num","2")
 	pcvar_default_banreason	=	register_cvar("amxbans_default_ban_reason","unknown")
 	
-	register_concmd("amx_ban", "cmdBan", ADMIN_BAN, "<steamID or nickname or #authid or IP> <time in mins> <reason>")
-	register_srvcmd("amx_ban", "cmdBan", -1, "<steamID or nickname or #authid or IP> <time in mins> <reason>")
-	register_concmd("amx_banip", "cmdBan", ADMIN_BAN, "<steamID or nickname or #authid or IP> <time in mins> <reason>")
-	register_srvcmd("amx_banip", "cmdBan", -1, "<steamID or nickname or #authid or IP> <time in mins> <reason>")
-	register_concmd("amx_unban", "cmdUnban", ADMIN_BAN, "<steamID or IP>");
-	register_srvcmd("amx_unban", "cmdUnban", -1, "<steamID or IP>");
+	register_concmd("amx_ban", "cmdBan", ADMIN_BAN, _T("<steamID or nickname or #authid or IP> <time in mins> <reason>"))
+	register_srvcmd("amx_ban", "cmdBan", -1, _T("<steamID or nickname or #authid or IP> <time in mins> <reason>"))
+	register_concmd("amx_banip", "cmdBan", ADMIN_BAN, _T("<steamID or nickname or #authid or IP> <time in mins> <reason>"))
+	register_srvcmd("amx_banip", "cmdBan", -1, _T("<steamID or nickname or #authid or IP> <time in mins> <reason>"))
+	register_concmd("amx_unban", "cmdUnban", ADMIN_BAN, _T("<steamID or IP>"));
+	register_srvcmd("amx_unban", "cmdUnban", -1, _T("<steamID or IP>"));
 	
-	register_srvcmd("amx_list", "cmdLst", ADMIN_RCON, "sends playerinfos to web")
+	register_srvcmd("amx_list", "cmdLst", ADMIN_RCON, _T("sends playerinfos to web"))
 	
 	g_coloredMenus 		= 	colored_menus()
-	g_MyMsgSync 		= 	CreateHudSyncObj()
-	
-	g_banReasons		=	ArrayCreate(128,7)
-	g_banReasons_Bantime 	=	ArrayCreate(1,7)
-	
-	g_disconPLname		=	ArrayCreate(32,1)
-	g_disconPLauthid	=	ArrayCreate(35,1)
-	g_disconPLip		=	ArrayCreate(22,1)
-	
 	
 	new configsDir[64]
-	get_configsdir(configsDir, 63)
+	get_localinfo("amx_configdir", configsDir, charsmax(configsDir))
 	
 	server_cmd("exec %s/sql.cfg", configsDir)
 	server_cmd("exec %s/amxbans.cfg", configsDir)
-	
-	//color_chat_init()
 }
-create_forwards() {
-	MFHandle[Ban_MotdOpen]=CreateMultiForward("amxbans_ban_motdopen",ET_IGNORE,FP_CELL)
-	MFHandle[Player_Flagged]=CreateMultiForward("amxbans_player_flagged",ET_IGNORE,FP_CELL,FP_CELL,FP_STRING)
-	MFHandle[Player_UnFlagged]=CreateMultiForward("amxbans_player_unflagged",ET_IGNORE,FP_CELL)
-}
-public addMenus() {
-	new szKey[64]
-	format(szKey,charsmax(szKey),"%L",LANG_SERVER,"ADMMENU_FLAGGING")
-	AddMenuItem(szKey,"amx_flaggingmenu",ADMIN_BAN,PLUGIN_NAME)
-	format(szKey,charsmax(szKey),"%L",LANG_SERVER,"ADMMENU_DISCONNECTED")
-	AddMenuItem(szKey,"amx_bandisconnectedmenu",ADMIN_BAN,PLUGIN_NAME)
-	format(szKey,charsmax(szKey),"%L",LANG_SERVER,"ADMMENU_HISTORY")
-	AddMenuItem(szKey,"amx_banhistorymenu",ADMIN_BAN,PLUGIN_NAME)
-}
-//forward from amxbans_core
-public amxbans_sql_initialized(Handle:sqlTuple,dbPrefix[]) {
-	
+
+public amxbans_sql_initialized(sqlTuple,dbPrefix[])
+{
 	copy(g_dbPrefix,charsmax(g_dbPrefix),dbPrefix)
 	//db was already initialized, second init can be caused by a second forward from main plugin
 	//this should never happen!!
@@ -154,50 +129,25 @@ public amxbans_sql_initialized(Handle:sqlTuple,dbPrefix[]) {
 		get_cvar_string("amx_sql_pass", pass, 63)
 		get_cvar_string("amx_sql_db", db, 63)
 		
-		g_SqlX = SQL_MakeDbTuple(host, user, pass, db)
+		g_SqlX = mysql_connect(host, user, pass, db)
 		
 		get_cvar_string("amx_sql_prefix",g_dbPrefix,charsmax(g_dbPrefix))
 	}
-	create_forwards()
 	set_task(0.1, "banmod_online")
 	set_task(0.2, "fetchReasons")
-	set_task(2.0, "addMenus")
 	
 	return PLUGIN_HANDLED
 }
-/*
-public plugin_cfg() {
-	//set_task(0.1, "sql_init")
-}
-public sql_init() {
-	new host[64], user[64], pass[64], db[64]
-
-	get_cvar_string("amx_sql_host", host, 63)
-	get_cvar_string("amx_sql_user", user, 63)
-	get_cvar_string("amx_sql_pass", pass, 63)
-	get_cvar_string("amx_sql_db", db, 63)
-	
-	get_cvar_string("amx_sql_prefix",g_dbPrefix,charsmax(g_dbPrefix))
-	//amxbans_get_db_prefix(g_dbPrefix,charsmax(g_dbPrefix))
-	
-	g_SqlX = SQL_MakeDbTuple(host, user, pass, db)
-	
-	create_forwards()
-	set_task(0.1, "banmod_online")
-	set_task(0.2, "fetchReasons")
-	set_task(2.0, "addMenus")
-}
-*/
 //////////////////////////////////////////////////////////////////
 public get_higher_ban_time_admin_flag() {
 	new flags[24]
-	get_pcvar_string(pcvar_higher_ban_time_admin, flags, 23)
+	get_cvarptr_string(pcvar_higher_ban_time_admin, flags, 23)
 	
 	return(read_flags(flags))
 }
 public get_admin_mole_access_flag() {
 	new flags[24]
-	get_pcvar_string(pcvar_admin_mole_access, flags, 23)
+	get_cvarptr_string(pcvar_admin_mole_access, flags, 23)
 	
 	return(read_flags(flags))
 }
@@ -207,7 +157,7 @@ public delayed_kick(player_id) {
 	new userid = get_user_userid(player_id)
 	new kick_message[128]
 	
-	format(kick_message,127,"%L", player_id,"KICK_MESSAGE")
+	formatex(kick_message,127,_T("You are BANNED. Check your console.", player_id))
 
 	if ( get_pcvar_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBANS DEBUG] Delayed Kick ID: <%d>", player_id)
@@ -235,13 +185,13 @@ public event_new_round() {
 /*********  Error handler  ***************/
 MySqlX_ThreadError(szQuery[], error[], errnum, failstate, id) {
 	if (failstate == TQUERY_CONNECT_FAILED) {
-		log_amx("%L", LANG_SERVER, "TCONNECTION_FAILED")
+		log_amx(_T("[AMXBans] Connection failed!"))
 	} else if (failstate == TQUERY_QUERY_FAILED) {
-		log_amx("%L", LANG_SERVER, "TQUERY_FAILED")
+		log_amx(_T("[AMXBans] Query failed!"))
 	}
-	log_amx("%L", LANG_SERVER, "TQUERY_ERROR", id)
-	log_amx("%L", LANG_SERVER, "TQUERY_MSG", error, errnum)
-	log_amx("%L", LANG_SERVER, "TQUERY_STATEMENT", szQuery)
+	log_amx(_T("[AMXBans] Threaded Query Error, Place: %d"), id)
+	log_amx(_T("[AMXBans] Message: %s (%d)"), error, errnum)
+	log_amx(_T("[AMXBans] Query statement: %s"), szQuery)
 }
 /*********    client functions     ************/
 public client_authorized(id) {

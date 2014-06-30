@@ -55,8 +55,8 @@ new g_choiceReason[33][128];
 new g_ban_type[33][3];
 new g_ident[50];
 
-new Array:g_banReasons;
-new Array:g_banReasons_Bantime;
+new g_banReasons[7][128];
+new g_banReasons_Bantime[7];
 
 // flagging
 new bool:g_being_flagged[33];
@@ -97,9 +97,9 @@ new Float:kick_delay = 10.0; //motd_delay from DB
 
 // disconnected Player
 
-new Array:g_disconPLname;
-new Array:g_disconPLauthid;
-new Array:g_disconPLip;
+new g_disconPLname[32];
+new g_disconPLauthid[35];
+new g_disconPLip[22];
 
 new g_highbantimesnum;
 new g_lowbantimesnum;
