@@ -156,7 +156,7 @@ public delayed_load()
 {
 	new configFile[128], curMap[64], configDir[128]
 
-	get_configsdir(configDir, sizeof(configDir)-1)
+	get_localinfo("amx_configdir", configsDir, charsmax(configsDir))
 	get_mapname(curMap, sizeof(curMap)-1)
 
 	new i=0;
@@ -269,7 +269,7 @@ public adminSql()
 		//backup to users.ini
 		new configsDir[64]
 		
-		get_configsdir(configsDir, 63)
+		get_localinfo("amx_configdir", configsDir, charsmax(configsDir))
 		format(configsDir, 63, "%s/users.ini", configsDir)
 		loadSettings(configsDir) // Load admins accounts
 		
