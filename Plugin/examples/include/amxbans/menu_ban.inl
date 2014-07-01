@@ -12,9 +12,6 @@
 #endif
 #define _menu_ban_included
 
-#include <amxmodx>
-#include <amxmisc>
-
 public cmdBanMenu(id,level,cid) {
 	if (!cmd_access(id,level,cid,1))
 		return PLUGIN_HANDLED

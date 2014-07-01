@@ -1,3 +1,4 @@
+
 /* AMX Mod script.
 *   Admin Base Plugin
 *
@@ -42,6 +43,24 @@ new AdminCount;
 
 #define MAX_ADMINS 128
 
+enum AdminProp
+{
+	AdminProp_Auth = 0,
+	AdminProp_Password,
+	AdminProp_Access,
+	AdminProp_Flags
+};
+
+enum Field
+{
+	Field_Name[64],
+	Field_Password[64],
+	Field_Access,
+	Field_Flags
+};
+
+new g_szAdmin[MAX_ADMINS][Field]
+
 #define ADMIN_LOOKUP	(1<<0)
 #define ADMIN_NORMAL	(1<<1)
 #define ADMIN_STEAM	(1<<2)
@@ -57,7 +76,7 @@ new amx_default_access;
 
 //amxbans
 new pcvarip,pcvarprefix,pcvaradminsfile
-new g_ServerAddr[100],g_dbPrefix[32],g_AdminsFromFile
+new g_ServerAddr[100],g_AdminsFromFile
 new g_szAdminNick[33][32],g_iAdminUseStaticBantime[33]
 new g_AdminNick[MAX_ADMINS][32];
 new g_AdminUseStaticBantime[MAX_ADMINS];
@@ -68,25 +87,7 @@ new bool:g_isAdmin[33]
 new Handle:info
 new bool:g_bSqlInitialized
 
-enum AdminProp
-{
-	AdminProp_Auth = 0,
-	AdminProp_Password,
-	AdminProp_Access,
-	AdminProp_Flags
-};
-
-enum Field
-{
-	Name[64],
-	Password[64],
-	Access,
-	Flags
-};
-
-new g_szAdmin[MAX_ADMINS][Field]
-
-public plugin_init()
+public plugin_init_core()
 {
 	load_translations("amxbans");
 	amx_mode=register_cvar("amx_mode", "1")
@@ -132,10 +133,22 @@ public plugin_init()
 	get_localinfo("amx_configdir", configsDir, charsmax(configsDir))
 	
 	server_cmd("exec %s/amx.cfg", configsDir)	// Execute main configuration file
-	server_cmd("exec %s/sql.cfg", configsDir)
+	server_cmd("exec %s/mysql.cfg", configsDir)
 	//server_cmd("exec %s/amxbans.cfg", configsDir)
 
 }
+
+get_ban_type(type[],len,steamid[],ip[])
+{
+	if(contain(steamid,"STEAM_0:") == 0 && contain(steamid,"STEAM_0:2") == -1) {
+		formatex(type,len,"S")
+	} else {
+		formatex(type,len,"SI")
+	}
+	if(equal(ip,"127.0.0.1") && equal(type,"SI")) return 0
+	return 1
+}
+
 public plugin_cfg() {
 	//fixx to be sure cfgs are loaded
 	set_task(0.1,"delayed_plugin_cfg")
@@ -167,7 +180,7 @@ public delayed_load()
 {
 	new configFile[128], curMap[64], configDir[128]
 
-	get_localinfo("amx_configdir", configsDir, charsmax(configsDir))
+	get_localinfo("amx_configdir", configDir, charsmax(configDir))
 	get_mapname(curMap, sizeof(curMap)-1)
 
 	new i=0;
@@ -220,22 +233,15 @@ loadSettings(szFilename[])
 			continue;
 		}
 			
-		Flags[0]=0;
-		Access[0]=0;
-		AuthData[0]=0;
-		Password[0]=0;
-		Name[0] = 0;
-		Static[0] = 0;
-			
 		// not enough parameters
-		if (parse(Text, AuthData, charsmax(AuthData), Password, charsmax(Password), Access, charsmax(Access), Flags, charsmax(Flags), Name, charsmax(Name), Static, charsmax(Static)) < 2)
+		if(parse(Text, AuthData, charsmax(AuthData), Password, charsmax(Password), Access, charsmax(Access), Flags, charsmax(Flags), Name, charsmax(Name), Static, charsmax(Static)) < 2)
 		{
 			continue;
 		}
 			
 		admins_push(AdminCount,AuthData,Password,read_flags(Access),read_flags(Flags));
 		formatex(g_AdminNick[AdminCount], 31, Name);
-		g_AdminUseStaticBantime[AdminCount] = str_to_num(Static));
+		g_AdminUseStaticBantime[AdminCount] = str_to_num(Static);
 			
 		AdminCount++;
 	}
@@ -256,46 +262,46 @@ admins_push(pos, authdata[], password[], access, flags)
 {
 	if(pos >= MAX_ADMINS)
 		return;  //Later it'll be information about increasing MAX_ADMINS define
-	formatex(g_szAdmin[pos][Name], 63, authdata);
-	formatex(g_szAdmin[pos][Password], 63, password);
-	g_szAdmin[pos][Access] = access;
-	g_szAdmin[pos][Flags] = flags;
+	formatex(g_szAdmin[pos][Field_Name], 63, authdata);
+	formatex(g_szAdmin[pos][Field_Password], 63, password);
+	g_szAdmin[pos][Field_Access] = access;
+	g_szAdmin[pos][Field_Flags] = flags;
 }
 
 admins_flush()
 {
 	for(new i=0;i<MAX_ADMINS;i++)
 	{
-		g_szAdmin[i][Name] = 0;
-		g_szAdmin[i][Password] = 0;
-		g_szAdmin[i][Access] = 0;
-		g_szAdmin[i][Flags] = 0;
+		formatex(g_szAdmin[i][Field_Name], 63, "0");
+		formatex(g_szAdmin[i][Field_Password], 63, "0");
+		g_szAdmin[i][Field_Access] = 0;
+		g_szAdmin[i][Field_Flags] = 0;
 	}
 }
 
 stock admins_lookup(pos, AdminProp:prop, auth[]="", len=0)
 {
 	if(pos >= MAX_ADMINS)
-		return;  //Later it'll be information about increasing MAX_ADMINS define
+		return 0;  //Later it'll be information about increasing MAX_ADMINS define
 		
 	if(prop == AdminProp_Access)
-		return g_szAdmin[pos][Access];
+		return g_szAdmin[pos][Field_Access];
 		
 	else if(prop == AdminProp_Auth)
-		formatex(auth, len, g_szAdmin[pos][Name]);
+		formatex(auth, len, g_szAdmin[pos][Field_Name]);
 		
 	else if(prop == AdminProp_Password)
-		formatex(auth, len, g_szAdmin[pos][Password]);
+		formatex(auth, len, g_szAdmin[pos][Field_Password]);
 		
 	else if(prop == AdminProp_Flags)
-		return g_szAdmin[pos][Flags];
+		return g_szAdmin[pos][Field_Flags];
 		
 	return 0;
 }
 
 public adminSql()
 {
-	new table[32], error[128], errno
+	new table[32], error[128];
 	AdminCount = 0;
 	admins_flush();
 	
@@ -304,7 +310,6 @@ public adminSql()
 	get_cvar_string("amx_sql_host", host, 63);
 	get_cvar_string("amx_sql_user", user, 31);
 	get_cvar_string("amx_sql_pass", pass, 31);
-	get_cvar_string("amx_sql_type", set_type, 11);
 	get_cvar_string("amx_sql_db", db, 127);
 	
 	new sql = mysql_connect(host, user, pass, db, error, charsmax(error))
@@ -337,7 +342,7 @@ public adminSql()
 		
 		new szPrefix[12];
 		get_cvarptr_string(pcvarprefix, szPrefix, 11);
-		amxbans_sql_initialized(sql, szPr);
+		amxbans_sql_initialized(sql, szPrefix);
 		
 		return PLUGIN_HANDLED
 	}
@@ -345,13 +350,13 @@ public adminSql()
 	
 	for(new i=0;i<MAX_ADMINS;i++)
 	{
-		g_AdminNick[i] = 0;
+		formatex(g_AdminNick[i], charsmax(g_AdminNick[]), "0");
 		g_AdminUseStaticBantime[i] = 0;
 	}
 	
 //amxbans	
 
-	new query = mysql_query(sql, pquery, "SELECT aa.steamid,aa.password,aa.access,aa.flags,aa.nickname,ads.custom_flags,ads.use_static_bantime \
+	new query = mysql_query(sql, "SELECT aa.steamid,aa.password,aa.access,aa.flags,aa.nickname,ads.custom_flags,ads.use_static_bantime \
 		FROM %s_amxadmins as aa, %s_admins_servers as ads, %s_serverinfo as si \
 		WHERE ((ads.admin_id=aa.id) AND (ads.server_id=si.id) AND \
 		((aa.days=0) OR (aa.expired>UNIX_TIMESTAMP(NOW()))) AND (si.address='%s'))", g_dbPrefix, g_dbPrefix, g_dbPrefix, g_ServerAddr)
@@ -409,7 +414,7 @@ public adminSql()
 	
 	new szPrefix[12];
 	get_cvarptr_string(pcvarprefix, szPrefix, 11);
-	amxbans_sql_initialized(sql, szPr);
+	amxbans_sql_initialized(sql, szPrefix);
 	
 	new players[32], num, pv
 	new name[32]
@@ -438,9 +443,9 @@ public cmdReload(id, level, cid)
 	if (id != 0)
 	{
 		if (AdminCount == 1)
-			console_print("[AMXBans] %s", _T("Loaded 1 admin from file"))
+			console_print(id, "[AMXBans] %s", _T("Loaded 1 admin from file"))
 		else
-			console_print("[AMXBans] %s", _T("Loaded %d admins from file"), AdminCount)
+			console_print(id, "[AMXBans] %s", _T("Loaded %d admins from file"), AdminCount)
 	}
 
 	return PLUGIN_HANDLED
@@ -649,7 +654,7 @@ public client_infochanged(id)
 	}
 	return PLUGIN_CONTINUE
 }
-public client_disconnect(id) {
+public client_disconnect_core(id) {
 	g_isAdmin[id]=false
 }
 public ackSignal(id)
@@ -658,10 +663,10 @@ public ackSignal(id)
 	return PLUGIN_HANDLED
 }
 
-public client_authorized(id)
+public client_authorized_core(id)
 	return get_cvarptr_num(amx_mode) ? accessUser(id) : PLUGIN_CONTINUE
 
-public client_putinserver(id)
+public client_putinserver_core(id)
 {
 	if (!is_dedicated_server() && id == 1)
 		return get_cvarptr_num(amx_mode) ? accessUser(id) : PLUGIN_CONTINUE

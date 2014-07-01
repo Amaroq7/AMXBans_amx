@@ -26,18 +26,18 @@ public cmdMenuBan(id) {
 		return PLUGIN_HANDLED
 	}
 	
-	if(get_pcvar_num(pcvar_debug) >= 2) {
+	if(get_cvarptr_num(pcvar_debug) >= 2) {
 		log_amx("[AMXBans cmdMenuBan %d] %d | %s | %s | %s | %s (%d min)",id,\
 		g_choicePlayerId[id],g_choicePlayerName[id],g_choicePlayerAuthid[id],g_choicePlayerIp[id],g_choiceReason[id],g_choiceTime[id])
 	}
 	
 	if (equal(g_ban_type[id], "S")) {
 		formatex(pquery, charsmax(pquery),"SELECT player_id FROM %s%s WHERE player_id='%s' and expired=0", g_dbPrefix, tbl_bans, g_choicePlayerAuthid[id])
-		if ( get_pcvar_num(pcvar_debug) >= 2 )
+		if ( get_cvarptr_num(pcvar_debug) >= 2 )
 			log_amx("[AMXBans cmdMenuBan] Banned a player by SteamID")
 	} else {
 		formatex(pquery, charsmax(pquery),"SELECT player_ip FROM %s%s WHERE player_ip='%s' and expired=0", g_dbPrefix, tbl_bans, g_choicePlayerIp[id])
-		if ( get_pcvar_num(pcvar_debug) >= 2 )
+		if ( get_cvarptr_num(pcvar_debug) >= 2 )
 			log_amx("[AMXBans cmdMenuBan] Banned a player by IP/steamID")
 	}
 	
@@ -49,8 +49,8 @@ public cmdMenuBan(id) {
 }
 public _cmdMenuBan(id, query, player)
 {
-	if ( get_pcvar_num(pcvar_debug) >= 1 )
-		log_amx("[AMXBans cmdMenuBan function 2]Playerid: %d", pid)
+	if ( get_cvarptr_num(pcvar_debug) >= 1 )
+		log_amx("[AMXBans cmdMenuBan function 2]Playerid: %d", player)
 	
 	if (mysql_num_rows(query)) {
 		client_print(id,print_console,"[AMXBANS] %s (%s %s)", _T("Player is already banned."), g_choicePlayerAuthid[id], g_choicePlayerIp[id])
@@ -66,7 +66,7 @@ public _cmdMenuBan(id, query, player)
 	new server_name[256]
 	get_cvar_string("hostname", server_name, charsmax(server_name))
 	
-	if ( get_pcvar_num(pcvar_add_mapname) == 1 ) {
+	if ( get_cvarptr_num(pcvar_add_mapname) == 1 ) {
 		new mapname[32]
 		get_mapname(mapname,31)
 		format(server_name,charsmax(server_name),"%s (%s)",server_name,mapname)
@@ -172,7 +172,7 @@ public cmdBan(id, level, cid)
 			console_print(id, "[AMXBans] %s", _T("Player %s was not found"),g_ident)
 
 		if ( get_cvarptr_num(pcvar_debug) >= 1 )
-			log_amx("[AMXBans] %s", _T(Player %s could not be found"),g_ident)
+			log_amx("[AMXBans] %s", _T("Player %s could not be found"),g_ident)
 				
 		return PLUGIN_HANDLED
 	}
@@ -197,11 +197,6 @@ public cmdBan(id, level, cid)
 		if ( get_cvarptr_num(pcvar_debug) >= 1 )
 			log_amx("[AMXBans cmdBan] Banned a player by IP/steamID: %s",g_choicePlayerIp[id])
 	}
-	
-	
-	new data[1]
-	data[0] = id
-	SQL_ThreadQuery(g_SqlX, "cmd_ban_", pquery, data, 1)
 	
 	new query = mysql_query(g_SqlX, pquery);
 	cmd_ban_(id, query);
@@ -251,7 +246,7 @@ public cmd_ban_(id, query)
 			{
 				get_user_authid(id, admin_steamid, 49)
 	
-				if ( get_pcvar_num(pcvar_debug) >= 1 )
+				if ( get_cvarptr_num(pcvar_debug) >= 1 )
 					log_amx("[AMXBans cmdBan] Adminsteamid: %s, Servercmd: %s", admin_steamid, (serverCmd)?"Yes":"No")
 			}
 			else
@@ -275,7 +270,7 @@ public cmd_ban_(id, query)
 			if ( contain(g_choiceReason[id], "Max Team Kill Violation") != -1 )
 				copy(admin_nick,charsmax(admin_nick),"[ATAC]")
 				
-			if ( get_pcvar_num(pcvar_debug) >= 1 )
+			if ( get_cvarptr_num(pcvar_debug) >= 1 )
 				log_amx("[AMXBans cmdBan] Admin nick: %s, Admin userid: %d", admin_nick, get_user_userid(id))
 			
 			new server_name[200]
@@ -304,9 +299,9 @@ public cmd_ban_(id, query)
 		else
 		{
 			if ( serverCmd )
-				log_message("[AMXBans] %L",LANG_SERVER,"ALREADY_BANNED", g_choicePlayerAuthid[id], g_choicePlayerIp[id])
+				log_message("[AMXBans] %s",_T("Player is already banned."), g_choicePlayerAuthid[id], g_choicePlayerIp[id])
 			else
-				client_print(id,print_console,"[AMXBans] %L",LANG_PLAYER,"ALREADY_BANNED", g_choicePlayerAuthid[id], g_choicePlayerIp[id])
+				client_print(id,print_console,"[AMXBans] %s",_T("Player is already banned."), g_choicePlayerAuthid[id], g_choicePlayerIp[id])
 			// Must make that false to be able to ban another player not on the server
 			// Players that aren't in the server always get id = 0
 			g_being_banned[g_choicePlayerId[id]] = false
@@ -600,8 +595,8 @@ public _select_amxbans_motd(id, query, player, bid) {
 					set_hudmessage(0, 255, 0, 0.05, 0.30, 0, 6.0, 10.0 , 0.5, 0.15, -1)
 					show_hudmessage(players[idx], message)
 				}
-				client_print(players[idx], print_chat message)
-				client_print(players[idx], print_console message)
+				client_print(players[idx], print_chat, message)
+				client_print(players[idx], print_console, message)
 			}
 		}
 		case 3:
@@ -696,7 +691,7 @@ public _select_amxbans_motd(id, query, player, bid) {
 					
 					if ( get_cvarptr_num(pcvar_show_hud_messages) == 1 ) {
 						set_hudmessage(0, 255, 0, 0.05, 0.30, 0, 6.0, 10.0 , 0.5, 0.15, -1)
-						ShowSyncHudMsg(players[idx], message)
+						show_hudmessage(players[idx], message)
 					}
 					client_print(players[idx],print_chat, message)
 					client_print(players[idx],print_console, message)

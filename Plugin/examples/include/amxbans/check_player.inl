@@ -22,7 +22,7 @@ public prebanned_check(id) {
 	if(get_user_flags(id) & ADMIN_IMMUNITY)
 		return PLUGIN_HANDLED
 	
-	new player_steamid[35], player_ip[22], pquery[1024]
+	new player_steamid[35], player_ip[22];
 	get_user_authid(id, player_steamid, 34)
 	get_user_ip(id, player_ip, 21, 1)
 	
@@ -61,9 +61,8 @@ public check_player(id) {
 	get_user_authid(id, player_steamid, 31)
 	get_user_ip(id, player_ip, 19, 1)
 	
-	data[0] = id
 	new query = mysql_query(g_SqlX, "SELECT bid,ban_created,ban_length,UNIX_TIMESTAMP(NOW()),ban_reason,admin_nick,admin_id,admin_ip,player_nick,player_id,player_ip,server_name,server_ip,ban_type \
-		FROM `%s%s` WHERE ( (player_id='%s' AND ban_type='S') OR (player_ip='%s' AND ban_type='SI') ) AND expired=0",g_dbPrefix, tbl_bans, player_steamid, player_ip
+		FROM `%s%s` WHERE ( (player_id='%s' AND ban_type='S') OR (player_ip='%s' AND ban_type='SI') ) AND expired=0",g_dbPrefix, tbl_bans, player_steamid, player_ip);
 		
 	check_player_(id, query);
 	
@@ -95,7 +94,7 @@ public check_player_(id, query)
 	mysql_getfield(query, 12, server_ip, 29)
 	mysql_getfield(query, 13, ban_type, 3)
 
-	if ( get_pcvar_num(pcvar_debug) >= 1 )
+	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans] Player Check on Connect:^nbid: %d ^nwhen: %d ^nlenght: %d ^nreason: %s ^nadmin: %s ^nadminsteamID: %s ^nPlayername %s ^nserver: %s ^nserverip: %s ^nbantype: %s",\
 		bid,ban_created,ban_length_int,ban_reason,admin_nick,admin_steamid,player_nick,server_name,server_ip,ban_type)
 
@@ -154,17 +153,17 @@ public check_player_(id, query)
 		client_cmd(id, "echo [AMXBans] %s", _T("Banned Nickname: %s"), player_nick)
 		client_cmd(id, "echo [AMXBans] %s", _T("Reason: '%s'"), ban_reason)
 		client_cmd(id, "echo [AMXBans] %s", _T("You can complain about your ban @ %s"), complain_url)
-		client_cmd(id, "echo [AMXBans] %s", _T("Your SteamID: '%s'", player_steamid)
+		client_cmd(id, "echo [AMXBans] %s", _T("Your SteamID: '%s'"), player_steamid)
 		client_cmd(id, "echo [AMXBans] %s", _T("Your IP: '%s'"), player_ip)
 		client_cmd(id, "echo [AMXBans] ===============================================")
 
-		if ( get_pcvar_num(pcvar_debug) >= 1 )
+		if ( get_cvarptr_num(pcvar_debug) >= 1 )
 			log_amx("[AMXBans] BID:<%d> Player:<%s> <%s> connected and got kicked, because of an active ban", bid, player_nick, player_steamid)
 
 		new id_str[3]
 		num_to_str(id,id_str,3)
 
-		if ( get_pcvar_num(pcvar_debug) >= 1 )
+		if ( get_cvarptr_num(pcvar_debug) >= 1 )
 			log_amx("[AMXBans] Delayed Kick-TASK ID1: <%d>  ID2: <%s>", id, id_str)
 		
 		add_kick_to_db(bid)
@@ -179,7 +178,7 @@ public check_player_(id, query)
 
 		mysql_query(g_SqlX, "UPDATE `%s%s` SET expired=1 WHERE bid=%d", g_dbPrefix, tbl_bans, bid)
 		
-		if ( get_pcvar_num(pcvar_debug) >= 1 )
+		if ( get_cvarptr_num(pcvar_debug) >= 1 )
 			log_amx("[AMXBans] PRUNE BAN: %s",pquery)
 			
 		check_flagged(id)

@@ -26,9 +26,6 @@ new pquery[1024];
 new authid[33][35],ip[33][22],reason[33][100]
 new flagged_end[33]
 
-// For hudmessages
-new g_MyMsgSync;
-
 // Variables for menus
 new g_coloredMenus;
 new bool:g_in_flagging[33];
@@ -50,8 +47,10 @@ new g_choiceReason[33][128];
 new g_ban_type[33][3];
 new g_ident[50];
 
-new g_banReasons[7][128];
-new g_banReasons_Bantime[7];
+#define MAX_REASONS 25
+
+new g_banReasons[MAX_REASONS][128];
+new g_banReasons_Bantime[MAX_REASONS];
 
 // flagging
 new bool:g_being_flagged[33];

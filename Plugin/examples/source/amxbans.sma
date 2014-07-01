@@ -23,22 +23,23 @@ new const amxbans_version[] = "6.0.3" // This is for the DB
 #include <VexdUM>
 #include <fun>
 
+#include "amxbans/global_vars.inl"
+
 // Amxbans Core
-#include "include/amxbans_core.inl"
+#include "amxbans/amxbans_core.inl"
 
 // Amxbans .inl files
-#include "include/amxbans/global_vars.inl"
-#include "include/amxbans/init_functions.inl"
-#include "include/amxbans/check_player.inl"
-#include "include/amxbans/check_flag.inl"
-#include "include/amxbans/menu_stocks.inl"
-#include "include/amxbans/menu_ban.inl"
-#include "include/amxbans/menu_disconnected.inl"
-#include "include/amxbans/menu_history.inl"
-#include "include/amxbans/menu_flag.inl"
-#include "include/amxbans/cmdBan.inl"
-#include "include/amxbans/cmdUnban.inl"
-#include "include/amxbans/web_handshake.inl"
+#include "amxbans/init_functions.inl"
+#include "amxbans/check_player.inl"
+#include "amxbans/check_flag.inl"
+//#include "amxbans/menu_stocks.inl"
+//#include "amxbans/menu_ban.inl"
+//#include "amxbans/menu_disconnected.inl"
+//#include "amxbans/menu_history.inl"
+//#include "amxbans/menu_flag.inl"
+#include "amxbans/cmdBan.inl"
+#include "amxbans/cmdUnban.inl"
+#include "amxbans/web_handshake.inl"
 
 
 // 16k * 4 = 64k stack size
@@ -46,6 +47,7 @@ new const amxbans_version[] = "6.0.3" // This is for the DB
 
 
 public plugin_init() {
+	plugin_init_core()
 	register_plugin(PLUGIN_NAME, VERSION, AUTHOR)
 	register_cvar("amxbans_version", VERSION, FCVAR_SERVER|FCVAR_EXTDLL|FCVAR_UNLOGGED|FCVAR_SPONLY)
 	
@@ -119,24 +121,24 @@ public amxbans_sql_initialized(sqlTuple,dbPrefix[])
 	copy(g_dbPrefix,charsmax(g_dbPrefix),dbPrefix)
 	//db was already initialized, second init can be caused by a second forward from main plugin
 	//this should never happen!!
-	if(g_SqlX != Empty_Handle) {
+	if(g_SqlX) {
 		log_amx("[AMXBans Error] DB Info Tuple from amxbans_core initialized twice!!")
 		return PLUGIN_HANDLED
 	}
 	
 	g_SqlX=sqlTuple
-	if ( get_pcvar_num(pcvar_debug) >= 1 )
+	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans] Received DB Info Tuple from amxbans_core: %d | %s", sqlTuple,g_dbPrefix)
-	if(g_SqlX==Empty_Handle) {
+	if(!g_SqlX) {
 		log_amx("[AMXBans Error] DB Info Tuple from amxbans_main is empty! Trying to get a valid one")
-		new host[64], user[64], pass[64], db[64]
+		new host[64], user[64], pass[64], db[64], error[128];
 
 		get_cvar_string("amx_sql_host", host, 63)
 		get_cvar_string("amx_sql_user", user, 63)
 		get_cvar_string("amx_sql_pass", pass, 63)
 		get_cvar_string("amx_sql_db", db, 63)
 		
-		g_SqlX = mysql_connect(host, user, pass, db)
+		g_SqlX = mysql_connect(host, user, pass, db, error, charsmax(error))
 		
 		get_cvar_string("amx_sql_prefix",g_dbPrefix,charsmax(g_dbPrefix))
 	}
@@ -166,7 +168,7 @@ public delayed_kick(player_id) {
 	
 	formatex(kick_message,127,_T("You are BANNED. Check your console.", player_id))
 
-	if ( get_pcvar_num(pcvar_debug) >= 1 )
+	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBANS DEBUG] Delayed Kick ID: <%d>", player_id)
 
 	server_cmd("kick #%d  %s",userid, kick_message)
@@ -208,16 +210,16 @@ public event_new_round()
 			
 			//amxbans_freeze
 			new tmp[8]
-			get_pcvar_string(pcvar_mode,tmp,charsmax(tmp))
+			get_cvarptr_string(pcvar_mode,tmp,charsmax(tmp))
 			mode=read_flags(tmp)
 			
-			g_frozen[id]=true;
+			g_frozen[i]=true;
 	
-			if(is_user_alive(id)) 
+			if(is_user_alive(i)) 
 			{
-				if(mode & 8) glow_player(id)
-				if(mode & 2) strip_player(id)
-				if(mode & 1) freeze_player(id)
+				if(mode & 8) glow_player(i)
+				if(mode & 2) strip_player(i)
+				if(mode & 1) freeze_player(i)
 		
 			}
 			//
@@ -226,8 +228,9 @@ public event_new_round()
 }
 /*********    client functions     ************/
 public client_authorized(id) {
+	client_authorized_core(id);
 	//fix for the invalid tuple error at mapchange, only a fast fix now
-	if(g_SqlX==Empty_Handle) {
+	if(!g_SqlX) {
 		set_task(2.0,"client_authorized",id)
 		return PLUGIN_HANDLED
 	}
@@ -236,15 +239,16 @@ public client_authorized(id) {
 	return PLUGIN_CONTINUE
 }
 public client_putinserver(id) {
+	client_putinserver_core(id);
 	//fix for the invalid tuple error at mapchange, only a fast fix now
-	if(g_SqlX==Empty_Handle) {
+	if(!g_SqlX) {
 		set_task(5.0,"client_putinserver",id)
 		return PLUGIN_HANDLED
 	}
 	//check if the player was banned before
 	prebanned_check(id)
 	//remove the player from the disconnect player list because he is already connected ;-)
-	disconnect_remove_player(id)
+	//disconnect_remove_player(id)
 	return PLUGIN_CONTINUE
 }
 
@@ -295,13 +299,14 @@ public announce(id) {
 
 public client_disconnect(id)
 {
+	client_disconnect_core(id);
 	if(task_exists(id)) remove_task(id)
 	g_frozen[id]=false
 	g_being_banned[id]=false
 	
 	if(!g_kicked_by_amxbans[id]) {
 		//only add players to disconnect list if not kicked by amxbans
-		disconnected_add_player(id)
+		//disconnected_add_player(id)
 	} else if(g_being_flagged[id]) {
 		// if kicked by amxbans maybe remove the flagged, not added yet
 		/*****///remove_flagged_by_steam(0,id,0)
