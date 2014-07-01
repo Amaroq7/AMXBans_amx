@@ -154,10 +154,6 @@ public plugin_cfg() {
 }
 public delayed_plugin_cfg()
 {
-	//disable default admin plugin
-	//added for admins who cant read the docs
-	pause("ae", "admin.amx");
-		
 	get_cvarptr_string(pcvarprefix,g_dbPrefix,charsmax(g_dbPrefix))
 	get_cvarptr_string(pcvarip,g_ServerAddr,charsmax(g_ServerAddr))
 	g_AdminsFromFile=get_cvarptr_num(pcvaradminsfile)
