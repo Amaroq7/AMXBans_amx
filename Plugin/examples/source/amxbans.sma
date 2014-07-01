@@ -51,9 +51,6 @@ public plugin_init() {
 	register_plugin(PLUGIN_NAME, VERSION, AUTHOR)
 	register_cvar("amxbans_version", VERSION, FCVAR_SERVER|FCVAR_EXTDLL|FCVAR_UNLOGGED|FCVAR_SPONLY)
 	
-	load_translations("common_amxbans")
-	load_translations("time")
-	
 	new szGame[20];
 	get_modname(szGame, charsmax(szGame));
 	
