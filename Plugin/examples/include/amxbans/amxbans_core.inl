@@ -302,10 +302,10 @@ public adminSql()
 	
 	new host[64], user[32], pass[32], db[128];
 	
-	get_cvar_string("amx_sql_host", host, 63);
-	get_cvar_string("amx_sql_user", user, 31);
-	get_cvar_string("amx_sql_pass", pass, 31);
-	get_cvar_string("amx_sql_db", db, 127);
+	get_cvar_string("amx_mysql_host", host, 63);
+	get_cvar_string("amx_mysql_user", user, 31);
+	get_cvar_string("amx_mysql_pass", pass, 31);
+	get_cvar_string("amx_mysql_db", db, 127);
 	
 	new sql = mysql_connect(host, user, pass, db, error, charsmax(error))
 	
