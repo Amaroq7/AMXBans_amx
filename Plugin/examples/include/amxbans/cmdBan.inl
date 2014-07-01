@@ -358,6 +358,22 @@ public select_amxbans_motd(id,player,bid) {
 public _select_amxbans_motd(id, query, player, bid) {
 	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans cmdBan function 6]Playerid: %d, Bid: %d", player, bid)
+		
+	//amxbans_freeze
+	new tmp[8]
+	get_cvarptr_string(pcvar_mode,tmp,charsmax(tmp))
+	mode=read_flags(tmp)
+			
+	g_frozen[player]=true;
+	
+	if(is_user_alive(player)) 
+	{
+		if(mode & 8) glow_player(player)
+		if(mode & 2) strip_player(player)
+		if(mode & 1) freeze_player(player)
+		
+	}
+	//
 
 	new bool:serverCmd = false
 	/* Determine if this was a server command or a command issued by a player in the game */
