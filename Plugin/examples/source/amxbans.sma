@@ -133,10 +133,10 @@ public amxbans_sql_initialized(sqlTuple,dbPrefix[])
 		log_amx("[AMXBans Error] DB Info Tuple from amxbans_main is empty! Trying to get a valid one")
 		new host[64], user[64], pass[64], db[64], error[128];
 
-		get_cvar_string("amx_sql_host", host, 63)
-		get_cvar_string("amx_sql_user", user, 63)
-		get_cvar_string("amx_sql_pass", pass, 63)
-		get_cvar_string("amx_sql_db", db, 63)
+		get_cvar_string("amx_mysql_host", host, 63)
+		get_cvar_string("amx_mysql_user", user, 63)
+		get_cvar_string("amx_mysql_pass", pass, 63)
+		get_cvar_string("amx_mysql_db", db, 63)
 		
 		g_SqlX = mysql_connect(host, user, pass, db, error, charsmax(error))
 		
