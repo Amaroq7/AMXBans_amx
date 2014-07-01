@@ -112,7 +112,7 @@ public plugin_init() {
 	new configsDir[64]
 	get_localinfo("amx_configdir", configsDir, charsmax(configsDir))
 	
-	server_cmd("exec %s/sql.cfg", configsDir)
+	server_cmd("exec %s/mysql.cfg", configsDir)
 	server_cmd("exec %s/amxbans.cfg", configsDir)
 }
 
