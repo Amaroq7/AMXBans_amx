@@ -112,5 +112,5 @@ public cmd_unban_3(id)
 		console_print(id, _T("%s has been unbanned"), g_choicePlayerAuthid[id]);
 	}
 		
-	log_amx("[AMXBans] %s", _T("%s<%d><%s><%s> unbanned %s"), "CONSOLE", 0, "CONSOLE", "", g_choicePlayerAuthid[id]);
+	log_amx(_T("[AMXBans] %s<%d><%s><%s> unbanned %s"), "CONSOLE", 0, "CONSOLE", "", g_choicePlayerAuthid[id]);
 }
