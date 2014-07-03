@@ -98,11 +98,8 @@ public plugin_init() {
 	pcvar_default_banreason	=	register_cvar("amxbans_default_ban_reason","unknown")
 	
 	register_concmd("amx_ban", "cmdBan", ADMIN_BAN, _T("<steamID or nickname or #authid or IP> <time in mins> <reason>"))
-	register_srvcmd("amx_ban", "cmdBan", -1, _T("<steamID or nickname or #authid or IP> <time in mins> <reason>"))
 	register_concmd("amx_banip", "cmdBan", ADMIN_BAN, _T("<steamID or nickname or #authid or IP> <time in mins> <reason>"))
-	register_srvcmd("amx_banip", "cmdBan", -1, _T("<steamID or nickname or #authid or IP> <time in mins> <reason>"))
 	register_concmd("amx_unban", "cmdUnban", ADMIN_BAN, _T("<steamID or IP>"));
-	register_srvcmd("amx_unban", "cmdUnban", -1, _T("<steamID or IP>"));
 	
 	register_srvcmd("amx_list", "cmdLst", ADMIN_RCON, _T("sends playerinfos to web"))
 	
