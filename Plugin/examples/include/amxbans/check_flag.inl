@@ -35,21 +35,18 @@ check_flagged(id)
 
 public _check_flagged(id)
 {
-	mysql_nextrow(g_SqlX);
-	new iRows = mysql_num_rows(g_SqlX);
-	
-	if(!iRows)
+	if(!mysql_nextrow(g_SqlX))
 		return PLUGIN_HANDLED;
-	
+		
 	new length, reason[128], created, fid, bool:flagged;
 	new cur_time = get_systime();
 	
-	for(new i=0;i<iRows;i++)
+	do
 	{
-		fid = mysql_getfield(g_SqlX, 0);
+		fid = mysql_getfield(g_SqlX, 1);
 		mysql_getfield(g_SqlX, 1, reason, charsmax(reason));
-		created = mysql_getfield(g_SqlX, 2);
-		length = mysql_getfield(g_SqlX, 3);
+		created = mysql_getfield(g_SqlX, 3);
+		length = mysql_getfield(g_SqlX, 4);
 		
 		if(created + length * 60 > cur_time)
 		{
@@ -59,9 +56,7 @@ public _check_flagged(id)
 		{
 			remove_flagged(fid);
 		}
-		
-		mysql_nextrow(g_SqlX);
-	}
+	} while(mysql_nextrow(g_SqlX) > 0)
 	
 	if(!flagged)
 		return PLUGIN_HANDLED;

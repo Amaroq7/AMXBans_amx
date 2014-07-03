@@ -54,7 +54,7 @@ public banmod_online_(id,query)
 			(%i, '%s', '%s:%s', '%s', '%s', 1)", g_dbPrefix, tbl_serverinfo, timestamp, servername, g_ip, g_port, modname, amxbans_version)
 	} else {
 		new kick_delay_str[10]
-		mysql_getfield(g_SqlX, 0, kick_delay_str, 9)
+		mysql_getfield(g_SqlX, 1, kick_delay_str, 9)
 
 		if (floatstr(kick_delay_str)>2.0) {
 			kick_delay=floatstr(kick_delay_str)
@@ -70,7 +70,7 @@ public banmod_online_(id,query)
 	
 	}
 	
-	log_amx("[AMXBans] %s", _T("AMXBans %s is online"), VERSION)
+	log_amx(_T("[AMXBans] AMXBans %s is online"), VERSION)
 	
 	mysql_query(g_SqlX, pquery);
 	
@@ -98,9 +98,12 @@ public fetchReasons(id)
 
 public fetchReasons_()
 {
-	new aNum
-	mysql_nextrow(g_SqlX);
-	new iRows = mysql_num_rows(g_SqlX);
+	new aNum, iRows;
+	
+	while(mysql_nextrow(g_SqlX) > 0)
+	{
+		++iRows;
+	}
 	
 	if(!iRows) {
 		server_print("[AMXBans] %s",_T("No Reasons found"))
@@ -133,8 +136,8 @@ public fetchReasons_()
 		new reason_time
 		for(new i=0;i<iRows;i++)
 		{
-			mysql_getfield(g_SqlX, 0, reason,charsmax(reason))
-			reason_time=mysql_getfield(g_SqlX,1)
+			mysql_getfield(g_SqlX, 1, reason,charsmax(reason))
+			reason_time=mysql_getfield(g_SqlX,2)
 			ArrayPushReasons(aNum,reason,reason_time)
 			mysql_nextrow(g_SqlX)
 			aNum++
@@ -142,9 +145,9 @@ public fetchReasons_()
 	}
 	
 	if (aNum == 1)
-		server_print("[AMXBans] %s", _T("1 Reason loaded from Database.") )
+		server_print(_T("[AMXBans] 1 Reason loaded from Database.") )
 	else
-		server_print("[AMXBans] %s", _T("%d Reasons loaded from Database."), aNum )
+		server_print(_T("[AMXBans] %d Reasons loaded from Database."), aNum )
 	
 	return PLUGIN_HANDLED
 }

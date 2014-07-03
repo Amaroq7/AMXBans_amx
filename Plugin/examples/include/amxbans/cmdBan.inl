@@ -16,7 +16,7 @@ public cmdMenuBan(id) {
 	if(!id) return PLUGIN_HANDLED
 	
 	if(g_being_banned[g_choicePlayerId[id]]) {
-		client_print(id,print_chat,"[AMXBans] %s", _T("Blocking doubleban from <%s>"), g_choicePlayerName[id])
+		client_print(id,print_chat,_T("[AMXBans] Blocking doubleban from <%s>"), g_choicePlayerName[id])
 	}
 	g_being_banned[g_choicePlayerId[id]]=true
 	
@@ -51,12 +51,9 @@ public _cmdMenuBan(id, player)
 {
 	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans cmdMenuBan function 2]Playerid: %d", player)
-		
-	mysql_nextrow(g_SqlX);
-	new iRows = mysql_num_rows(g_SqlX);
 	
-	if (iRows) {
-		client_print(id,print_console,"[AMXBANS] %s (%s %s)", _T("Player is already banned."), g_choicePlayerAuthid[id], g_choicePlayerIp[id])
+	if (mysql_nextrow(g_SqlX)) {
+		client_print(id,print_console,"[AMXBANS] %s", _T("Player is already banned."))
 		g_being_banned[id] = false
 		return PLUGIN_HANDLED
 	}
@@ -170,12 +167,12 @@ public cmdBan(id, level, cid)
 		g_being_banned[0]=false
 		
 		if (serverCmd)
-			server_print("[AMXBans] %s", _T("Player %s was not found"),g_ident)
+			server_print(_T("[AMXBans] Player %s was not found"),g_ident)
 		else
-			console_print(id, "[AMXBans] %s", _T("Player %s was not found"),g_ident)
+			console_print(id, _T("[AMXBans] Player %s was not found"),g_ident)
 
 		if ( get_cvarptr_num(pcvar_debug) >= 1 )
-			log_amx("[AMXBans] %s", _T("Player %s could not be found"),g_ident)
+			log_amx(_T("[AMXBans] Player %s could not be found"),g_ident)
 				
 		return PLUGIN_HANDLED
 	}
@@ -232,9 +229,9 @@ public cmd_ban_(id)
 				g_being_banned[0] = false
 			
 				if (serverCmd)
-					server_print("[AMXBans] %s", _T("Player %s could not be found"),g_ident)
+					server_print(_T("[AMXBans] Player %s could not be found"),g_ident)
 				else
-					console_print(id, "[AMXBans] %s", _T("Player %s could not be found"),g_ident)
+					console_print(id, _T("[AMXBans] Player %s could not be found"),g_ident)
 	
 				if ( get_cvarptr_num(pcvar_debug) >= 1 )
 					log_amx("[AMXBans] Player %s could not be found",g_ident)
@@ -303,9 +300,9 @@ public cmd_ban_(id)
 		else
 		{
 			if ( serverCmd )
-				log_message("[AMXBans] %s",_T("Player is already banned."), g_choicePlayerAuthid[id], g_choicePlayerIp[id])
+				log_message("[AMXBans] %s",_T("Player is already banned."))
 			else
-				client_print(id,print_console,"[AMXBans] %s",_T("Player is already banned."), g_choicePlayerAuthid[id], g_choicePlayerIp[id])
+				client_print(id,print_console,"[AMXBans] %s",_T("Player is already banned."))
 			// Must make that false to be able to ban another player not on the server
 			// Players that aren't in the server always get id = 0
 			g_being_banned[g_choicePlayerId[id]] = false
@@ -380,15 +377,15 @@ public _select_amxbans_motd(id, player, bid) {
 		return PLUGIN_HANDLED
 		//copy(amxban_motd_url,256, "0")	
 	} else {
-		mysql_getfield(g_SqlX, 0, amxban_motd_url, 256)
-		mysql_getfield(g_SqlX, 1, pl_nick, 99)
-		mysql_getfield(g_SqlX, 2, pl_steamid, 34)
-		mysql_getfield(g_SqlX, 3, pl_ip, 21)
-		mysql_getfield(g_SqlX, 4, admin_nick, 99)
-		mysql_getfield(g_SqlX, 5, admin_steamid, 34)
-		mysql_getfield(g_SqlX, 6, ban_type, 31)
-		mysql_getfield(g_SqlX, 7, ban_reason, 127)
-		iBanLength=mysql_getfield(g_SqlX,8)
+		mysql_getfield(g_SqlX, 1, amxban_motd_url, 256)
+		mysql_getfield(g_SqlX, 2, pl_nick, 99)
+		mysql_getfield(g_SqlX, 3, pl_steamid, 34)
+		mysql_getfield(g_SqlX, 4, pl_ip, 21)
+		mysql_getfield(g_SqlX, 5, admin_nick, 99)
+		mysql_getfield(g_SqlX, 6, admin_steamid, 34)
+		mysql_getfield(g_SqlX, 7, ban_type, 31)
+		mysql_getfield(g_SqlX, 8, ban_reason, 127)
+		iBanLength=mysql_getfield(g_SqlX,9)
 	}
 	
 	new admin_team[11]
@@ -421,28 +418,28 @@ public _select_amxbans_motd(id, player, bid) {
 		{
 			case 1:
 			{
-				client_print(player,print_console,"[AMXBans] %s",_T("You have been banned from this Server!"))
-				client_print(player,print_console,"[AMXBans] %s",_T("You can complain about your ban @ %s"), complain_url)
+				client_print(player,print_console,_T("[AMXBans] You have been banned from this Server!"))
+				client_print(player,print_console,_T("[AMXBans] You can complain about your ban @ %s"), complain_url)
 				formatex(ban_motd, charsmax(ban_motd), _T("<body bgcolor=#9CB3B3><font size=^"18^" color=^"red^">You have been banned.</font><br><br><font color=^"black^">Reason: %s<br>Duration: %s<br>SteamID: %s</font>", player), ban_reason, cTimeLengthPlayer, pl_steamid)
 			}
 			case 2:
 			{
-				client_print(player,print_console,"[AMXBans] %s",_T("Banned by Admin: %s"), admin_nick)
-				client_print(player,print_console,"[AMXBans] %s",_T("You can complain about your ban @ %s"), complain_url)
+				client_print(player,print_console,_T("[AMXBans] Banned by Admin: %s"), admin_nick)
+				client_print(player,print_console,_T("[AMXBans] You can complain about your ban @ %s"), complain_url)
 				formatex(ban_motd, charsmax(ban_motd), _T("<body bgcolor=#9CB3B3><font size=^"18^" color=^"red^">You have been banned.</font><br><br><font color=^"black^">Reason: %s<br>Duration: %s<br>SteamID: %s<br>Admin: %s</font>", player), ban_reason, cTimeLengthPlayer, pl_steamid, admin_nick)
 			}
 			case 3:
 			{
 				if (is_user_admin(id))
 				{
-					client_print(player,print_console,"[AMXBans] %s",_T("Banned by Admin: %s"), admin_nick)
-					client_print(player,print_console,"[AMXBans] %s",_T("You can complain about your ban @ %s"), complain_url)
+					client_print(player,print_console,_T("[AMXBans] Banned by Admin: %s"), admin_nick)
+					client_print(player,print_console,_T("[AMXBans] You can complain about your ban @ %s"), complain_url)
 					formatex(ban_motd, charsmax(ban_motd), _T("<body bgcolor=#9CB3B3><font size=^"18^" color=^"red^">You have been banned.</font><br><br><font color=^"black^">Reason: %s<br>Duration: %s<br>SteamID: %s<br>Admin: %s</font>", player), ban_reason, cTimeLengthPlayer, pl_steamid, admin_nick)
 				}
 				else
 				{
-					client_print(player,print_console,"[AMXBans] %s",_T("You have been banned from this Server!"))
-					client_print(player,print_console,"[AMXBans] %s",_T("You can complain about your ban @ %s"), complain_url)
+					client_print(player,print_console,_T("[AMXBans] You have been banned from this Server!"))
+					client_print(player,print_console,_T("[AMXBans] You can complain about your ban @ %s"), complain_url)
 					formatex(ban_motd, charsmax(ban_motd), _T("<body bgcolor=#9CB3B3><font size=^"18^" color=^"red^">You have been banned.</font><br><br><font color=^"black^">Reason: %s<br>Duration: %s<br>SteamID: %s</font>", player), ban_reason, cTimeLengthPlayer, pl_steamid)
 				}
 			}
@@ -450,8 +447,8 @@ public _select_amxbans_motd(id, player, bid) {
 			{
 				if (is_user_admin(id))
 				{
-					client_print(player,print_console,"[AMXBans] %s",_T("Banned by Admin: %s"),admin_nick)
-					client_print(player,print_console,"[AMXBans] %s",_T("You can complain about your ban @ %s"), complain_url)
+					client_print(player,print_console,_T("[AMXBans] Banned by Admin: %s"),admin_nick)
+					client_print(player,print_console,_T("[AMXBans] You can complain about your ban @ %s"), complain_url)
 					formatex(ban_motd, charsmax(ban_motd), _T("<body bgcolor=#9CB3B3><font size=^"18^" color=^"red^">You have been banned.</font><br><br><font color=^"black^">Reason: %s<br>Duration: %s<br>SteamID: %s<br>Admin: %s</font>", player), ban_reason, cTimeLengthPlayer, pl_steamid, admin_nick)
 				}
 			}
@@ -459,17 +456,17 @@ public _select_amxbans_motd(id, player, bid) {
 			{
 				if (is_user_admin(id))
 				{
-					client_print(player,print_console,"[AMXBans] %s",_T("You have been banned from this Server!"))
-					client_print(player,print_console,"[AMXBans] %s",_T("You can complain about your ban @ %s"), complain_url)
+					client_print(player,print_console,_T("[AMXBans] You have been banned from this Server!"))
+					client_print(player,print_console,_T("[AMXBans] You can complain about your ban @ %s"), complain_url)
 					formatex(ban_motd, charsmax(ban_motd), _T("<body bgcolor=#9CB3B3><font size=^"18^" color=^"red^">You have been banned.</font><br><br><font color=^"black^">Reason: %s<br>Duration: %s<br>SteamID: %s</font>", player), ban_reason, cTimeLengthPlayer, pl_steamid)
 				}
 			}
 		}
 		
-		client_print(player,print_console,"[AMXBans] %s",_T("Reason: '%s'"), ban_reason)
-		client_print(player,print_console,"[AMXBans] %s",_T("Duration: '%s'"), cTimeLengthPlayer)
-		client_print(player,print_console,"[AMXBans] %s",_T("Your SteamID: '%s'"), pl_steamid)
-		client_print(player,print_console,"[AMXBans] %s",_T("Your IP: '%s'"), pl_ip)
+		client_print(player,print_console,_T("[AMXBans] Reason: '%s'"), ban_reason)
+		client_print(player,print_console,_T("[AMXBans] Duration: '%s'"), cTimeLengthPlayer)
+		client_print(player,print_console,_T("[AMXBans] Your SteamID: '%s'"), pl_steamid)
+		client_print(player,print_console,_T("[AMXBans] Your IP: '%s'"), pl_ip)
 		client_print(player,print_console,"[AMXBans] ===============================================")
 		
 		new msg[1400]
@@ -503,9 +500,9 @@ public _select_amxbans_motd(id, player, bid) {
 		}
 	} else { /* The player was not found in server */
 		if (serverCmd)
-			server_print("[AMXBans] %s", _T("Player %s was not found"), g_ident)
+			server_print(_T("[AMXBans] Player %s was not found"), g_ident)
 		else
-			console_print(id, "[AMXBans] %s", _T("Player %s was not found"),g_ident)
+			console_print(id, _T("[AMXBans] Player %s was not found"),g_ident)
 
 		if ( get_cvarptr_num(pcvar_debug) >= 1 )
 			log_amx("[AMXBans] Player %s could not be found",g_ident)
@@ -517,9 +514,9 @@ public _select_amxbans_motd(id, player, bid) {
 			
 	if (equal(ban_type, "S")) {
 		if ( serverCmd )
-			log_message("[AMXBans] %s",_T("SteamID '%s' banned successfully (IP logged). Player gets kicked."),pl_steamid)
+			log_message(_T("[AMXBans] SteamID '%s' banned successfully (IP logged). Player gets kicked."),pl_steamid)
 		else
-			client_print(id,print_console,"[AMXBans] %s",_T("SteamID '%s' banned successfully (IP logged). Player gets kicked."),pl_steamid)
+			client_print(id,print_console,_T("[AMXBans] SteamID '%s' banned successfully (IP logged). Player gets kicked."),pl_steamid)
 	} else {
 		if ( serverCmd )
 			log_message("[AMXBans] %s",_T("Banned Players Ip successfully. Player gets kicked."))
@@ -730,22 +727,18 @@ public locate_player(id, identifier[])
 	if ( player ) {
 		/* Check for immunity */
 		if (get_user_flags(player) & ADMIN_IMMUNITY) {
-			new name[32]
-			get_user_name(player, name, 31)
 			if( id == 0 )
-				server_print("[AMXBans] Client ^"%s^" has immunity", name)
+				server_print(_T("This player has immunity"))
 			else
-				console_print(id,"[AMXBans] Client ^"%s^" has immunity", name)
+				console_print(id,_T("This player has immunity"))
 			return -1
 		}
 		/* Check for a bot */
 		else if (is_user_bot(player)) {
-			new name[32]
-			get_user_name(player, name, 31)
 			if( id == 0 )
-				server_print("[AMXBans] Client ^"%s^" is a bot", name)
+				server_print(_T("This player is a Bot"))
 			else
-				console_print(id,"[AMXBans] Client ^"%s^" is a bot", name)
+				console_print(id,_T("This player is a Bot"))
 			return -1
 		}
 	} else {

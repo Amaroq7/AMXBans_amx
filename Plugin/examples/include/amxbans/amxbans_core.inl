@@ -244,11 +244,11 @@ loadSettings(szFilename[])
 
 	if (AdminCount == 1)
 	{
-		server_print("[AMXBans] %s", _T("Loaded 1 admin from file"));
+		server_print(_T("[AMXBans] Loaded 1 admin from file"));
 	}
 	else
 	{
-		server_print("[AMXBans] %s", _T("Loaded %d admins from file"), AdminCount);
+		server_print(_T("[AMXBans] Loaded %d admins from file"), AdminCount);
 	}
 	
 	return 1;
@@ -315,7 +315,7 @@ public adminSql()
 	//sql error or amxbans_use_admins_file == 1
 	if (!sql || g_AdminsFromFile == 1)
 	{
-		if(!g_AdminsFromFile) server_print("[AMXBans] %s", _T("SQL error: can't connect: '%s'"), error)
+		if(!g_AdminsFromFile) server_print(_T("[AMXBans] SQL error: can't connect: '%s'"), error)
 		
 		//backup to users.ini
 		new configsDir[64]
@@ -358,53 +358,48 @@ public adminSql()
 		((aa.days=0) OR (aa.expired>UNIX_TIMESTAMP(NOW()))) AND (si.address='%s'))", g_dbPrefix, g_dbPrefix, g_dbPrefix, g_ServerAddr)
 		
 //
-	mysql_nextrow(sql)
-	new iRows = mysql_num_rows(sql);
+
+	new AuthData[44];
+	new Password[44];
+	new Access[32];
+	new Flags[32];
+	new Nick[32];
+	new Static[5]
+	new iStatic
 	
-	if(iRows)
+	while(mysql_nextrow(sql))
 	{
-		new AuthData[44];
-		new Password[44];
-		new Access[32];
-		new Flags[32];
-		new Nick[32];
-		new Static[5]
-		new iStatic
-		
-		for(new i=0;i<iRows;i++)
-		{
-			mysql_getresult(sql, "steamid", AuthData, sizeof(AuthData)-1);
-			mysql_getresult(sql, "password", Password, sizeof(Password)-1);
-			mysql_getresult(sql, "use_static_bantime", Static, sizeof(Static)-1);
-			mysql_getresult(sql, "custom_flags", Access, sizeof(Access)-1);
-			mysql_getresult(sql, "nickname", Nick, sizeof(Nick)-1);
-			mysql_getresult(sql, "flags", Flags, sizeof(Flags)-1);
+		mysql_getresult(sql, "steamid", AuthData, sizeof(AuthData)-1);
+		mysql_getresult(sql, "password", Password, sizeof(Password)-1);
+		mysql_getresult(sql, "use_static_bantime", Static, sizeof(Static)-1);
+		mysql_getresult(sql, "custom_flags", Access, sizeof(Access)-1);
+		mysql_getresult(sql, "nickname", Nick, sizeof(Nick)-1);
+		mysql_getresult(sql, "flags", Flags, sizeof(Flags)-1);
 			
-			//if custom access not set get the global
-			trim(Access)
-			if(equal(Access,"")) mysql_getresult(sql, "access", Access, sizeof(Access)-1);
+		//if custom access not set get the global
+		trim(Access)
+		if(equal(Access,"")) mysql_getresult(sql, "access", Access, sizeof(Access)-1);
 			
-			admins_push(AdminCount,AuthData,Password,read_flags(Access),read_flags(Flags));
+		admins_push(AdminCount,AuthData,Password,read_flags(Access),read_flags(Flags));
 			
-			//save nick
-			formatex(g_AdminNick[AdminCount], 31, Nick)
+		//save nick
+		formatex(g_AdminNick[AdminCount], 31, Nick)
 			
-			//save static bantime
-			iStatic=1
-			if(equal(Static,"no")) iStatic=0
-			g_AdminUseStaticBantime[AdminCount] = iStatic
+		//save static bantime
+		iStatic=1
+		if(equal(Static,"no")) iStatic=0
+		g_AdminUseStaticBantime[AdminCount] = iStatic
 			
-			++AdminCount;
-		}
+		++AdminCount;
 	}
 
 	if (AdminCount == 1)
 	{
-		server_print("[AMXBans] %s", _T("Loaded 1 admin from database"))
+		server_print(_T("[AMXBans] Loaded 1 admin from database"))
 	}
 	else
 	{
-		server_print("[AMXBans] %s", _T("Loaded %d admins from database"), AdminCount)
+		server_print(_T("[AMXBans] Loaded %d admins from database"), AdminCount)
 	}
 	
 	g_bSqlInitialized=true
@@ -440,9 +435,9 @@ public cmdReload(id, level, cid)
 	if (id != 0)
 	{
 		if (AdminCount == 1)
-			console_print(id, "[AMXBans] %s", _T("Loaded 1 admin from file"))
+			console_print(id, _T("[AMXBans] Loaded 1 admin from file"))
 		else
-			console_print(id, "[AMXBans] %s", _T("Loaded %d admins from file"), AdminCount)
+			console_print(id, _T("[AMXBans] Loaded %d admins from file"), AdminCount)
 	}
 
 	return PLUGIN_HANDLED

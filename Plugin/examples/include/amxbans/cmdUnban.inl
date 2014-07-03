@@ -43,15 +43,15 @@ public cmd_unban_1(id)
 	/* Determine if this was a server command or a command issued by a player in the game */
 	if (id == 0)
 		serverCmd = true;
-		
-	mysql_nextrow(g_SqlX);
+	
+	while(mysql_nextrow(g_SqlX)) {}
+	
 	new iRows = mysql_num_rows(g_SqlX);
 	
 	if (iRows == 1)
 	{
-		new banid = mysql_getfield(g_SqlX, 0);
+		new banid = mysql_getfield(g_SqlX, 1);
 		new admin_nick[100];
-		mysql_get_username_safe(id, admin_nick, 99);
 			
 		if (serverCmd)
 		{
@@ -60,6 +60,8 @@ public cmd_unban_1(id)
 			if (strlen(servernick))
 				copy(admin_nick, charsmax(admin_nick), servernick);
 		}
+		else
+			mysql_get_username_safe(id, admin_nick, 99);
 		
 		mysql_query(g_SqlX, "INSERT INTO `%s%s` \
 		(`id`, `bid`, `edit_time`, `admin_nick`, `edit_reason`) \
@@ -71,16 +73,16 @@ public cmd_unban_1(id)
 	else if(!iRows)
 	{
 		if (serverCmd)
-			server_print("[AMXBans] %s", _T("SteamID / IP %s is not banned."), g_choicePlayerAuthid[id]);
+			server_print(_T("[AMXBans] SteamID / IP %s is not banned."), g_choicePlayerAuthid[id]);
 		else
-			console_print(id, "[AMXBans] %s", _T("SteamID / IP %s is not banned."), g_choicePlayerAuthid[id]);
+			console_print(id, _T("[AMXBans] SteamID / IP %s is not banned."), g_choicePlayerAuthid[id]);
 	}
 	else
 	{
 		if (serverCmd)
-			server_print("[AMXBans] %s", _T("SteamID / IP %s has %d active bans, cannot unban."), g_choicePlayerAuthid[id], mysql_num_rows(g_SqlX));
+			server_print(_T("[AMXBans] SteamID / IP %s has %d active bans, cannot unban."), g_choicePlayerAuthid[id], mysql_num_rows(g_SqlX));
 		else
-			console_print(id, "[AMXBans] %s", _T("SteamID / IP %s has %d active bans, cannot unban."), g_choicePlayerAuthid[id], mysql_num_rows(g_SqlX));
+			console_print(id, _T("[AMXBans] SteamID / IP %s has %d active bans, cannot unban."), g_choicePlayerAuthid[id], mysql_num_rows(g_SqlX));
 	}
 }
 

@@ -48,7 +48,7 @@ public announce(id) {
 	for(new i=1;i<=g_iMaxPlayers;i++) {
 		if(!is_user_connected(i)) continue
 		if(get_user_flags(i) & ADMIN_CHAT)
-			client_print(i, print_chat, "[AMXBans] %s", _T("Flagged Player(s): %s <%s> Reason: %s"),name,authid[id],reason[id])
+			client_print(i, print_chat, _T("[AMXBans] Flagged Player(s): %s <%s> Reason: %s"),name,authid[id],reason[id])
 	}
 }
 public client_disconnect_flagged(id) {

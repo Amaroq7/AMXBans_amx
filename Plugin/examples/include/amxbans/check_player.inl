@@ -33,7 +33,7 @@ public prebanned_check(id) {
 }
 public prebanned_check_(id)
 {
-	new ban_count=mysql_getfield(g_SqlX, 0)
+	new ban_count=mysql_getfield(g_SqlX, 1)
 	
 	if(ban_count < get_cvarptr_num(pcvar_show_prebanned_num))
 		return PLUGIN_HANDLED
@@ -45,10 +45,10 @@ public prebanned_check_(id)
 	for(new i=1;i<=g_iMaxPlayers;i++) {
 		if(is_user_bot(i) || is_user_hltv(i) || !is_user_connected(i) || i==id) continue
 		if(get_user_flags(i) & ADMIN_CHAT) {
-			client_print(i, print_chat, "[AMXBans] %s", _T("<%s> %s has been banned %i times before."), name, player_steamid, ban_count)
+			client_print(i, print_chat, _T("[AMXBans] <%s> %s has been banned %i times before."), name, player_steamid, ban_count)
 		}
 	}
-	log_amx("[AMXBans] %s", _T("<%s> %s has been banned %i times before."), name, player_steamid, ban_count)
+	log_amx(_T("[AMXBans] <%s> %s has been banned %i times before."), name, player_steamid, ban_count)
 	
 	return PLUGIN_HANDLED
 }
@@ -70,10 +70,7 @@ public check_player(id) {
 
 public check_player_(id)
 {
-	mysql_nextrow(g_SqlX);
-	new iRows = mysql_num_rows(g_SqlX);
-	
-	if(!iRows) {
+	if(!mysql_nextrow(g_SqlX)) {
 		check_flagged(id)
 		return PLUGIN_HANDLED
 	}
@@ -81,20 +78,20 @@ public check_player_(id)
 	new ban_reason[128], admin_nick[100],admin_steamid[50],admin_ip[30],ban_type[4]
 	new player_nick[50],player_steamid[50],player_ip[30],server_name[100],server_ip[30]
 	
-	new bid = mysql_getfield(g_SqlX, 0)
-	new ban_created = mysql_getfield(g_SqlX, 1)
-	new ban_length_int = mysql_getfield(g_SqlX, 2)*60 //min to sec
-	new current_time_int = mysql_getfield(g_SqlX, 3)
-	mysql_getfield(g_SqlX, 4, ban_reason, 127)
-	mysql_getfield(g_SqlX, 5, admin_nick, 99)
-	mysql_getfield(g_SqlX, 6, admin_steamid, 49)
-	mysql_getfield(g_SqlX, 7, admin_ip, 29)
-	mysql_getfield(g_SqlX, 8, player_nick, 49)
-	mysql_getfield(g_SqlX, 9, player_steamid, 49)
-	mysql_getfield(g_SqlX, 10, player_ip, 29)
-	mysql_getfield(g_SqlX, 11, server_name, 99)
-	mysql_getfield(g_SqlX, 12, server_ip, 29)
-	mysql_getfield(g_SqlX, 13, ban_type, 3)
+	new bid = mysql_getfield(g_SqlX, 1)
+	new ban_created = mysql_getfield(g_SqlX, 2)
+	new ban_length_int = mysql_getfield(g_SqlX, 3)*60 //min to sec
+	new current_time_int = mysql_getfield(g_SqlX, 4)
+	mysql_getfield(g_SqlX, 5, ban_reason, 127)
+	mysql_getfield(g_SqlX, 6, admin_nick, 99)
+	mysql_getfield(g_SqlX, 7, admin_steamid, 49)
+	mysql_getfield(g_SqlX, 8, admin_ip, 29)
+	mysql_getfield(g_SqlX, 9, player_nick, 49)
+	mysql_getfield(g_SqlX, 10, player_steamid, 49)
+	mysql_getfield(g_SqlX, 11, player_ip, 29)
+	mysql_getfield(g_SqlX, 12, server_name, 99)
+	mysql_getfield(g_SqlX, 13, server_ip, 29)
+	mysql_getfield(g_SqlX, 14, ban_type, 3)
 
 	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans] Player Check on Connect:^nbid: %d ^nwhen: %d ^nlenght: %d ^nreason: %s ^nadmin: %s ^nadminsteamID: %s ^nPlayername %s ^nserver: %s ^nserverip: %s ^nbantype: %s",\
@@ -116,47 +113,47 @@ public check_player_(id)
 		{
 			case 1:
 			{
-				client_cmd(id, "echo [AMXBans] %s", _T("You are banned from this Server!"))
+				client_cmd(id, _T("echo [AMXBans] You are banned from this Server!"))
 			}
 			case 2:
 			{
-				client_cmd(id, "echo [AMXBans] %s", _T("You have been banned from this Server by Admin %s."), admin_nick)
+				client_cmd(id, _T("echo [AMXBans] You have been banned from this Server by Admin %s."), admin_nick)
 			}
 			case 3:
 			{
 				if (is_user_admin(id))
-					client_cmd(id, "echo [AMXBans] %s", _T("You have been banned from this Server by Admin %s."), admin_nick)
+					client_cmd(id, _T("echo [AMXBans] You have been banned from this Server by Admin %s."), admin_nick)
 				else
-					client_cmd(id, "echo [AMXBans] %s", _T("You are banned from this Server!"))
+					client_cmd(id, _T("echo [AMXBans] You are banned from this Server!"))
 			}
 			case 4:
 			{
 				if (is_user_admin(id))
-					client_cmd(id, "echo [AMXBans] %s", _T("You have been banned from this Server by Admin %s."), admin_nick)
+					client_cmd(id, _T("echo [AMXBans] You have been banned from this Server by Admin %s."), admin_nick)
 			}
 			case 5:
 			{
 				if (is_user_admin(id))
-					client_cmd(id, "echo [AMXBans] %s",_T("You are banned from this Server!"))
+					client_cmd(id, _T("echo [AMXBans] You are banned from this Server!"))
 			}
 		}
 		
 		if (ban_length_int==0) {
-			client_cmd(id, "echo [AMXBans] %s",_T("You are permanently banned."))
+			client_cmd(id, _T("echo [AMXBans] You are permanently banned."))
 		} else {
 			new cTimeLength[128]
 			new iSecondsLeft = (ban_created + ban_length_int - current_time_int)
 			get_time_length(id, iSecondsLeft, timeunit_seconds, cTimeLength, 127)
-			client_cmd(id, "echo [AMXBans] %s", _T("There are %s left of your ban."), cTimeLength)
+			client_cmd(id, _T("echo [AMXBans] There are %s left of your ban."), cTimeLength)
 		}
 		
 		replace_all(complain_url,charsmax(complain_url),"http://","")
 		
-		client_cmd(id, "echo [AMXBans] %s", _T("Banned Nickname: %s"), player_nick)
-		client_cmd(id, "echo [AMXBans] %s", _T("Reason: '%s'"), ban_reason)
-		client_cmd(id, "echo [AMXBans] %s", _T("You can complain about your ban @ %s"), complain_url)
-		client_cmd(id, "echo [AMXBans] %s", _T("Your SteamID: '%s'"), player_steamid)
-		client_cmd(id, "echo [AMXBans] %s", _T("Your IP: '%s'"), player_ip)
+		client_cmd(id, _T("echo [AMXBans] Banned Nickname: %s"), player_nick)
+		client_cmd(id, _T("echo [AMXBans] Reason: '%s'"), ban_reason)
+		client_cmd(id, _T("echo [AMXBans] You can complain about your ban @ %s"), complain_url)
+		client_cmd(id, _T("echo [AMXBans] Your SteamID: '%s'"), player_steamid)
+		client_cmd(id, _T("echo [AMXBans] Your IP: '%s'"), player_ip)
 		client_cmd(id, "echo [AMXBans] ===============================================")
 
 		if ( get_cvarptr_num(pcvar_debug) >= 1 )
@@ -176,7 +173,7 @@ public check_player_(id)
 		return PLUGIN_HANDLED
 	} else {
 		// The ban has expired
-		client_cmd(id, "echo [AMXBans] %s",_T("You have been banned at least one time before."))
+		client_cmd(id, _T("echo [AMXBans] You have been banned at least one time before."))
 
 		mysql_query(g_SqlX, "UPDATE `%s%s` SET expired=1 WHERE bid=%d", g_dbPrefix, tbl_bans, bid)
 		
