@@ -34,7 +34,7 @@ public banmod_online(id)
 	banmod_online_(id, query);
 }
 
-public banmod_online_(id, query)
+public banmod_online_(id,query)
 {
 	new timestamp = get_systime(0)
 	new servername[100]
@@ -42,7 +42,9 @@ public banmod_online_(id, query)
 	new modname[32]
 	get_modname(modname,charsmax(modname))
 	
-	if (!mysql_num_rows(query)) {
+	mysql_nextrow(g_SqlX)
+	
+	if (!mysql_num_rows(g_SqlX)) {
 		if ( get_cvarptr_num(pcvar_debug) >= 1 ) {
 			server_print("[AMXBans] INSERT INTO `%s%s` VALUES ('', %i,'%s', '%s:%s', '%s', '', '%s', '', '', '0')", g_dbPrefix, tbl_serverinfo, timestamp, servername, g_ip, g_port, modname, amxbans_version)
 			log_amx("[AMXBans] INSERT INTO `%s%s` VALUES ('', %i,'%s', '%s:%s', '%s', '', '%s', '', '', '0')", g_dbPrefix, tbl_serverinfo, timestamp, servername, g_ip, g_port, modname, amxbans_version)
@@ -52,7 +54,7 @@ public banmod_online_(id, query)
 			(%i, '%s', '%s:%s', '%s', '%s', 1)", g_dbPrefix, tbl_serverinfo, timestamp, servername, g_ip, g_port, modname, amxbans_version)
 	} else {
 		new kick_delay_str[10]
-		mysql_getfield(query, 0, kick_delay_str, 9)
+		mysql_getfield(g_SqlX, 0, kick_delay_str, 9)
 
 		if (floatstr(kick_delay_str)>2.0) {
 			kick_delay=floatstr(kick_delay_str)
@@ -85,19 +87,22 @@ public cmdFetchReasons(id,level,cid) {
 }
 public fetchReasons(id)
 {		
-	new query = mysql_query(g_SqlX, "SELECT re.reason,re.static_bantime FROM %s%s as re,%s%s as rs ,%s%s as si \
+	mysql_query(g_SqlX, "SELECT re.reason,re.static_bantime FROM %s%s as re,%s%s as rs ,%s%s as si \
 				WHERE si.address = '%s:%s' AND si.reasons = rs.setid and rs.reasonid = re.id \
 				ORDER BY re.id", g_dbPrefix, tbl_reasons, g_dbPrefix, tbl_reasons_to_set, g_dbPrefix, tbl_serverinfo, g_ip,g_port);
 	
-	fetchReasons_(query);
+	fetchReasons_();
 	
 	return PLUGIN_HANDLED
 }
 
-public fetchReasons_(query)
+public fetchReasons_()
 {
 	new aNum
-	if (!mysql_num_rows(query)) {
+	mysql_nextrow(g_SqlX);
+	new iRows = mysql_num_rows(g_SqlX);
+	
+	if(!iRows) {
 		server_print("[AMXBans] %s",_T("No Reasons found"))
 		new temp[128]
 		formatex(temp,charsmax(temp), _T("Cheater",0))
@@ -121,14 +126,17 @@ public fetchReasons_(query)
 		aNum = 7
 
 		return PLUGIN_HANDLED
-	} else {
+	} 
+	else
+	{
 		new reason[128]
 		new reason_time
-		while(mysql_num_rows(query)) {
-			mysql_getfield(query, 0, reason,charsmax(reason))
-			reason_time=mysql_getfield(query,1)
+		for(new i=0;i<iRows;i++)
+		{
+			mysql_getfield(g_SqlX, 0, reason,charsmax(reason))
+			reason_time=mysql_getfield(g_SqlX,1)
 			ArrayPushReasons(aNum,reason,reason_time)
-			mysql_nextrow(query)
+			mysql_nextrow(g_SqlX)
 			aNum++
 		}
 	}

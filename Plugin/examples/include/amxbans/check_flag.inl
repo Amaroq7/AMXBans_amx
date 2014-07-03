@@ -26,27 +26,30 @@ check_flagged(id)
 	else
 		formatex(pquery, charsmax(pquery), "SELECT `fid`,`reason`,`created`,`length` FROM `%s%s` WHERE (player_id='%s' OR player_ip='%s') AND `server_ip`='%s:%s' ORDER BY `length` ASC", g_dbPrefix, tbl_flagged, authid,ip, g_ip, g_port);
 	
-	new query = mysql_query(g_SqlX, pquery);
+	mysql_query(g_SqlX, pquery);
 	
-	_check_flagged(id, query);
+	_check_flagged(id);
 	
 	return PLUGIN_HANDLED;
 }
 
-public _check_flagged(id, query)
+public _check_flagged(id)
 {
-	if(!mysql_num_rows(query))
+	mysql_nextrow(g_SqlX);
+	new iRows = mysql_num_rows(g_SqlX);
+	
+	if(!iRows)
 		return PLUGIN_HANDLED;
 	
 	new length, reason[128], created, fid, bool:flagged;
 	new cur_time = get_systime();
 	
-	while(mysql_num_rows(query))
+	for(new i=0;i<iRows;i++)
 	{
-		fid = mysql_getfield(query, 0);
-		mysql_getfield(query, 1, reason, charsmax(reason));
-		created = mysql_getfield(query, 2);
-		length = mysql_getfield(query, 3);
+		fid = mysql_getfield(g_SqlX, 0);
+		mysql_getfield(g_SqlX, 1, reason, charsmax(reason));
+		created = mysql_getfield(g_SqlX, 2);
+		length = mysql_getfield(g_SqlX, 3);
 		
 		if(created + length * 60 > cur_time)
 		{
@@ -57,7 +60,7 @@ public _check_flagged(id, query)
 			remove_flagged(fid);
 		}
 		
-		mysql_nextrow(query);
+		mysql_nextrow(g_SqlX);
 	}
 	
 	if(!flagged)

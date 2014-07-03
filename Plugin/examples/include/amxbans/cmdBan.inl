@@ -41,18 +41,21 @@ public cmdMenuBan(id) {
 			log_amx("[AMXBans cmdMenuBan] Banned a player by IP/steamID")
 	}
 	
-	new query = mysql_query(g_SqlX, pquery);
+	mysql_query(g_SqlX, pquery);
 	
-	_cmdMenuBan(id, query, g_choicePlayerId[id]);
+	_cmdMenuBan(id, g_choicePlayerId[id]);
 	
 	return PLUGIN_HANDLED	
 }
-public _cmdMenuBan(id, query, player)
+public _cmdMenuBan(id, player)
 {
 	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans cmdMenuBan function 2]Playerid: %d", player)
+		
+	mysql_nextrow(g_SqlX);
+	new iRows = mysql_num_rows(g_SqlX);
 	
-	if (mysql_num_rows(query)) {
+	if (iRows) {
 		client_print(id,print_console,"[AMXBANS] %s (%s %s)", _T("Player is already banned."), g_choicePlayerAuthid[id], g_choicePlayerIp[id])
 		g_being_banned[id] = false
 		return PLUGIN_HANDLED
@@ -77,11 +80,11 @@ public _cmdMenuBan(id, query, player)
 	new player_nick[64]
 	mysql_escape_string(g_choicePlayerName[id],player_nick,charsmax(player_nick))
 	
-	new query2 = mysql_query(g_SqlX, "INSERT INTO `%s%s` (player_id,player_ip,player_nick,admin_ip,admin_id,admin_nick,ban_type,ban_reason,ban_created,ban_length,server_name,server_ip,expired) \
+	mysql_query(g_SqlX, "INSERT INTO `%s%s` (player_id,player_ip,player_nick,admin_ip,admin_id,admin_nick,ban_type,ban_reason,ban_created,ban_length,server_name,server_ip,expired) \
 			VALUES('%s','%s','%s','%s','%s','%s','%s','%s',UNIX_TIMESTAMP(NOW()),%d,'%s','%s:%s',0)", \
 			g_dbPrefix, tbl_bans, g_choicePlayerAuthid[id],g_choicePlayerIp[id],player_nick,admin_ip,admin_steamid,admin_nick,g_ban_type[id],g_choiceReason[id],g_choiceTime[id],servername_safe,g_ip,g_port)
 	
-	insert_bandetails(id, query2, g_choicePlayerId[id])
+	insert_bandetails(id, g_choicePlayerId[id])
 	
 	return PLUGIN_HANDLED
 }
@@ -198,12 +201,12 @@ public cmdBan(id, level, cid)
 			log_amx("[AMXBans cmdBan] Banned a player by IP/steamID: %s",g_choicePlayerIp[id])
 	}
 	
-	new query = mysql_query(g_SqlX, pquery);
-	cmd_ban_(id, query);
+	mysql_query(g_SqlX, pquery);
+	cmd_ban_(id);
 	
 	return PLUGIN_HANDLED
 }
-public cmd_ban_(id, query)
+public cmd_ban_(id)
 {
 	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans cmd_ban_ function 2]Playerid: %d", g_choicePlayerId[id])
@@ -214,8 +217,9 @@ public cmd_ban_(id, query)
 		serverCmd = true;
 	
 	else
-	{	
-		if (!mysql_num_rows(query))
+	{
+		mysql_nextrow(g_SqlX);
+		if (!mysql_num_rows(g_SqlX))
 		{
 			if (g_choicePlayerId[id])
 			{
@@ -287,13 +291,13 @@ public cmd_ban_(id, query)
 			new admin_nick_safe[200]
 			mysql_escape_string(admin_nick,admin_nick_safe,charsmax(admin_nick_safe))
 		
-			new query2 = mysql_query(g_SqlX, "INSERT INTO `%s%s` \
+			mysql_query(g_SqlX, "INSERT INTO `%s%s` \
 				(player_id,player_ip,player_nick,admin_ip,admin_id,admin_nick,ban_type,ban_reason,ban_created,ban_length,server_name,server_ip,expired) \
 				VALUES('%s','%s','%s','%s','%s','%s','%s','%s',UNIX_TIMESTAMP(NOW()),%d,'%s','%s:%s',0)", \
 				g_dbPrefix, tbl_bans, g_choicePlayerAuthid[id], g_choicePlayerIp[id], player_nick, admin_ip, admin_steamid, admin_nick, g_ban_type[id], \
 				g_choiceReason[id], g_choiceTime[id], server_name, g_ip, g_port);
 		
-			insert_bandetails(id, query2, g_choicePlayerId[id]);
+			insert_bandetails(id, g_choicePlayerId[id]);
 			
 		}
 		else
@@ -314,12 +318,12 @@ public cmd_ban_(id, query)
 /*******************************************************************************************************************/
 /*******************************************************************************************************************/
 /*******************************************************************************************************************/
-public insert_bandetails(id, query, player)
+public insert_bandetails(id, player)
 {
 	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans cmdBan function 5]Playerid: %d",g_choicePlayerId[id])
 	
-	new bid = mysql_insert_id(query)
+	new bid = mysql_insert_id(g_SqlX)
 	
 	//break if the banned player should not be kicked at the moment
 	if(g_menuban_type[id]==1) return PLUGIN_HANDLED
@@ -342,38 +346,17 @@ public select_amxbans_motd(id,player,bid) {
 
 	//get ban details from db
 	
-	new query = mysql_query(g_SqlX, "SELECT si.amxban_motd,ba.player_nick,ba.player_id,ba.player_ip, \
+	mysql_query(g_SqlX, "SELECT si.amxban_motd,ba.player_nick,ba.player_id,ba.player_ip, \
 		ba.admin_nick,ba.admin_id,ba.ban_type,ba.ban_reason,ba.ban_length FROM `%s%s` as si,`%s%s` as ba \
 		WHERE ba.bid=%d AND si.address = '%s:%s'", g_dbPrefix, tbl_serverinfo, g_dbPrefix, tbl_bans, bid,g_ip, g_port)
 		
-	new data[4]
-	data[0] = id
-	data[1] = bid
-	data[2] = player
-	_select_amxbans_motd(id, query, player, bid);
-	
+	_select_amxbans_motd(id, player, bid);
 	
 	return PLUGIN_HANDLED
 }
-public _select_amxbans_motd(id, query, player, bid) {
+public _select_amxbans_motd(id, player, bid) {
 	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans cmdBan function 6]Playerid: %d, Bid: %d", player, bid)
-		
-	//amxbans_freeze
-	new tmp[8]
-	get_cvarptr_string(pcvar_mode,tmp,charsmax(tmp))
-	mode=read_flags(tmp)
-			
-	g_frozen[player]=true;
-	
-	if(is_user_alive(player)) 
-	{
-		if(mode & 8) glow_player(player)
-		if(mode & 2) strip_player(player)
-		if(mode & 1) freeze_player(player)
-		
-	}
-	//
 
 	new bool:serverCmd = false
 	/* Determine if this was a server command or a command issued by a player in the game */
@@ -383,7 +366,10 @@ public _select_amxbans_motd(id, query, player, bid) {
 	new amxban_motd_url[256]
 	new admin_steamid[35], admin_nick[100],pl_steamid[35],pl_nick[100],pl_ip[22]
 	new ban_type[32],ban_reason[128],iBanLength
-	if (!mysql_num_rows(query)) {
+	
+	mysql_nextrow(g_SqlX);
+	
+	if (!mysql_num_rows(g_SqlX)) {
 		amxban_motd_url[0]='^0'
 		log_amx("[AMXBans cmdBan function 6.1] select_motd without result: %d, Bid: %d", player, bid)
 		
@@ -394,15 +380,15 @@ public _select_amxbans_motd(id, query, player, bid) {
 		return PLUGIN_HANDLED
 		//copy(amxban_motd_url,256, "0")	
 	} else {
-		mysql_getfield(query, 0, amxban_motd_url, 256)
-		mysql_getfield(query, 1, pl_nick, 99)
-		mysql_getfield(query, 2, pl_steamid, 34)
-		mysql_getfield(query, 3, pl_ip, 21)
-		mysql_getfield(query, 4, admin_nick, 99)
-		mysql_getfield(query, 5, admin_steamid, 34)
-		mysql_getfield(query, 6, ban_type, 31)
-		mysql_getfield(query, 7, ban_reason, 127)
-		iBanLength=mysql_getfield(query,8)
+		mysql_getfield(g_SqlX, 0, amxban_motd_url, 256)
+		mysql_getfield(g_SqlX, 1, pl_nick, 99)
+		mysql_getfield(g_SqlX, 2, pl_steamid, 34)
+		mysql_getfield(g_SqlX, 3, pl_ip, 21)
+		mysql_getfield(g_SqlX, 4, admin_nick, 99)
+		mysql_getfield(g_SqlX, 5, admin_steamid, 34)
+		mysql_getfield(g_SqlX, 6, ban_type, 31)
+		mysql_getfield(g_SqlX, 7, ban_reason, 127)
+		iBanLength=mysql_getfield(g_SqlX,8)
 	}
 	
 	new admin_team[11]
@@ -505,7 +491,7 @@ public _select_amxbans_motd(id, query, player, bid) {
 		}
 		
 		if(is_user_connected(player)) {
-			//ExecuteForward(MFHandle[Ban_MotdOpen],ret,player)
+			amxbans_ban_motdopen(player);
 	
 			new motdTitle[64]
 			formatex(motdTitle,charsmax(motdTitle),"Banned by Amxbans %s",VERSION)

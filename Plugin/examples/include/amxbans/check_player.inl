@@ -26,15 +26,14 @@ public prebanned_check(id) {
 	get_user_authid(id, player_steamid, 34)
 	get_user_ip(id, player_ip, 21, 1)
 	
-	new query = mysql_query(g_SqlX, "SELECT COUNT(*) FROM `%s%s` WHERE ( (player_id='%s' AND ban_type='S') OR (player_ip='%s' AND ban_type='SI') ) AND expired=1",g_dbPrefix, tbl_bans, player_steamid, player_ip)
+	mysql_query(g_SqlX, "SELECT COUNT(*) FROM `%s%s` WHERE ( (player_id='%s' AND ban_type='S') OR (player_ip='%s' AND ban_type='SI') ) AND expired=1",g_dbPrefix, tbl_bans, player_steamid, player_ip)
 	
-	prebanned_check_(id, query);
+	prebanned_check_(id);
 	return PLUGIN_HANDLED
 }
-public prebanned_check_(id, query)
+public prebanned_check_(id)
 {
-	
-	new ban_count=mysql_getfield(query, 0)
+	new ban_count=mysql_getfield(g_SqlX, 0)
 	
 	if(ban_count < get_cvarptr_num(pcvar_show_prebanned_num))
 		return PLUGIN_HANDLED
@@ -61,17 +60,20 @@ public check_player(id) {
 	get_user_authid(id, player_steamid, 31)
 	get_user_ip(id, player_ip, 19, 1)
 	
-	new query = mysql_query(g_SqlX, "SELECT bid,ban_created,ban_length,UNIX_TIMESTAMP(NOW()),ban_reason,admin_nick,admin_id,admin_ip,player_nick,player_id,player_ip,server_name,server_ip,ban_type \
+	mysql_query(g_SqlX, "SELECT bid,ban_created,ban_length,UNIX_TIMESTAMP(NOW()),ban_reason,admin_nick,admin_id,admin_ip,player_nick,player_id,player_ip,server_name,server_ip,ban_type \
 		FROM `%s%s` WHERE ( (player_id='%s' AND ban_type='S') OR (player_ip='%s' AND ban_type='SI') ) AND expired=0",g_dbPrefix, tbl_bans, player_steamid, player_ip);
 		
-	check_player_(id, query);
+	check_player_(id);
 	
 	return PLUGIN_HANDLED
 }
 
-public check_player_(id, query)
+public check_player_(id)
 {
-	if(!mysql_num_rows(query)) {
+	mysql_nextrow(g_SqlX);
+	new iRows = mysql_num_rows(g_SqlX);
+	
+	if(!iRows) {
 		check_flagged(id)
 		return PLUGIN_HANDLED
 	}
@@ -79,20 +81,20 @@ public check_player_(id, query)
 	new ban_reason[128], admin_nick[100],admin_steamid[50],admin_ip[30],ban_type[4]
 	new player_nick[50],player_steamid[50],player_ip[30],server_name[100],server_ip[30]
 	
-	new bid = mysql_getfield(query, 0)
-	new ban_created = mysql_getfield(query, 1)
-	new ban_length_int = mysql_getfield(query, 2)*60 //min to sec
-	new current_time_int = mysql_getfield(query, 3)
-	mysql_getfield(query, 4, ban_reason, 127)
-	mysql_getfield(query, 5, admin_nick, 99)
-	mysql_getfield(query, 6, admin_steamid, 49)
-	mysql_getfield(query, 7, admin_ip, 29)
-	mysql_getfield(query, 8, player_nick, 49)
-	mysql_getfield(query, 9, player_steamid, 49)
-	mysql_getfield(query, 10, player_ip, 29)
-	mysql_getfield(query, 11, server_name, 99)
-	mysql_getfield(query, 12, server_ip, 29)
-	mysql_getfield(query, 13, ban_type, 3)
+	new bid = mysql_getfield(g_SqlX, 0)
+	new ban_created = mysql_getfield(g_SqlX, 1)
+	new ban_length_int = mysql_getfield(g_SqlX, 2)*60 //min to sec
+	new current_time_int = mysql_getfield(g_SqlX, 3)
+	mysql_getfield(g_SqlX, 4, ban_reason, 127)
+	mysql_getfield(g_SqlX, 5, admin_nick, 99)
+	mysql_getfield(g_SqlX, 6, admin_steamid, 49)
+	mysql_getfield(g_SqlX, 7, admin_ip, 29)
+	mysql_getfield(g_SqlX, 8, player_nick, 49)
+	mysql_getfield(g_SqlX, 9, player_steamid, 49)
+	mysql_getfield(g_SqlX, 10, player_ip, 29)
+	mysql_getfield(g_SqlX, 11, server_name, 99)
+	mysql_getfield(g_SqlX, 12, server_ip, 29)
+	mysql_getfield(g_SqlX, 13, ban_type, 3)
 
 	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans] Player Check on Connect:^nbid: %d ^nwhen: %d ^nlenght: %d ^nreason: %s ^nadmin: %s ^nadminsteamID: %s ^nPlayername %s ^nserver: %s ^nserverip: %s ^nbantype: %s",\

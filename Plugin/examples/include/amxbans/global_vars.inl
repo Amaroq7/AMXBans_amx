@@ -23,8 +23,6 @@ new bool:g_being_banned[33];
 new bool:g_supported_game = true;
 new g_iMaxPlayers;
 new pquery[1024];
-new authid[33][35],ip[33][22],reason[33][100]
-new flagged_end[33]
 
 // Variables for menus
 new g_coloredMenus;
@@ -101,8 +99,3 @@ new g_flagtimesnum;
 new g_HighBanMenuValues[14];
 new g_LowBanMenuValues[14];
 new g_FlagMenuValues[14];
-
-//AMXBans Freeze
-new bool:g_frozen[33]
-new pcvar_mode
-new mode

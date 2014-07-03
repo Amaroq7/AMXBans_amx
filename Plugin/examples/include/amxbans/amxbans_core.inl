@@ -154,6 +154,7 @@ public plugin_cfg() {
 }
 public delayed_plugin_cfg()
 {
+	pause("ace", "admin.amx");
 	get_cvarptr_string(pcvarprefix,g_dbPrefix,charsmax(g_dbPrefix))
 	get_cvarptr_string(pcvarip,g_ServerAddr,charsmax(g_ServerAddr))
 	g_AdminsFromFile=get_cvarptr_num(pcvaradminsfile)
@@ -351,14 +352,16 @@ public adminSql()
 	
 //amxbans	
 
-	new query = mysql_query(sql, "SELECT aa.steamid,aa.password,aa.access,aa.flags,aa.nickname,ads.custom_flags,ads.use_static_bantime \
+	mysql_query(sql, "SELECT aa.steamid,aa.password,aa.access,aa.flags,aa.nickname,ads.custom_flags,ads.use_static_bantime \
 		FROM %s_amxadmins as aa, %s_admins_servers as ads, %s_serverinfo as si \
 		WHERE ((ads.admin_id=aa.id) AND (ads.server_id=si.id) AND \
 		((aa.days=0) OR (aa.expired>UNIX_TIMESTAMP(NOW()))) AND (si.address='%s'))", g_dbPrefix, g_dbPrefix, g_dbPrefix, g_ServerAddr)
 		
 //
+	mysql_nextrow(sql)
+	new iRows = mysql_num_rows(sql);
 	
-	if(mysql_num_rows(query))
+	if(iRows)
 	{
 		new AuthData[44];
 		new Password[44];
@@ -368,18 +371,18 @@ public adminSql()
 		new Static[5]
 		new iStatic
 		
-		while (mysql_num_rows(query))
+		for(new i=0;i<iRows;i++)
 		{
-			mysql_getresult(query, "steamid", AuthData, sizeof(AuthData)-1);
-			mysql_getresult(query, "password", Password, sizeof(Password)-1);
-			mysql_getresult(query, "use_static_bantime", Static, sizeof(Static)-1);
-			mysql_getresult(query, "custom_flags", Access, sizeof(Access)-1);
-			mysql_getresult(query, "nickname", Nick, sizeof(Nick)-1);
-			mysql_getresult(query, "flags", Flags, sizeof(Flags)-1);
+			mysql_getresult(sql, "steamid", AuthData, sizeof(AuthData)-1);
+			mysql_getresult(sql, "password", Password, sizeof(Password)-1);
+			mysql_getresult(sql, "use_static_bantime", Static, sizeof(Static)-1);
+			mysql_getresult(sql, "custom_flags", Access, sizeof(Access)-1);
+			mysql_getresult(sql, "nickname", Nick, sizeof(Nick)-1);
+			mysql_getresult(sql, "flags", Flags, sizeof(Flags)-1);
 			
 			//if custom access not set get the global
 			trim(Access)
-			if(equal(Access,"")) mysql_getresult(query, "access", Access, sizeof(Access)-1);
+			if(equal(Access,"")) mysql_getresult(sql, "access", Access, sizeof(Access)-1);
 			
 			admins_push(AdminCount,AuthData,Password,read_flags(Access),read_flags(Flags));
 			
@@ -392,17 +395,16 @@ public adminSql()
 			g_AdminUseStaticBantime[AdminCount] = iStatic
 			
 			++AdminCount;
-			mysql_nextrow(query)
 		}
 	}
 
 	if (AdminCount == 1)
 	{
-		server_print("[AMXBans] %s", _T("Loaded 1 admin from file"))
+		server_print("[AMXBans] %s", _T("Loaded 1 admin from database"))
 	}
 	else
 	{
-		server_print("[AMXBans] %s", _T("Loaded %d admins from file"), AdminCount)
+		server_print("[AMXBans] %s", _T("Loaded %d admins from database"), AdminCount)
 	}
 	
 	g_bSqlInitialized=true

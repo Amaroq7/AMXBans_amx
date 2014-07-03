@@ -28,6 +28,12 @@ new const amxbans_version[] = "6.0.3" // This is for the DB
 // Amxbans Core
 #include "amxbans/amxbans_core.inl"
 
+// Amxbans Freeze
+#include "amxbans/amxbans_freeze.inl"
+
+// Amxbans Flagged
+#include "amxbans/amxbans_flagged.inl"
+
 // Amxbans .inl files
 #include "amxbans/init_functions.inl"
 #include "amxbans/check_player.inl"
@@ -48,6 +54,7 @@ new const amxbans_version[] = "6.0.3" // This is for the DB
 
 public plugin_init() {
 	plugin_init_core()
+	plugin_init_freeze()
 	register_plugin(PLUGIN_NAME, VERSION, AUTHOR)
 	register_cvar("amxbans_version", VERSION, FCVAR_SERVER|FCVAR_EXTDLL|FCVAR_UNLOGGED|FCVAR_SPONLY)
 	
@@ -66,10 +73,6 @@ public plugin_init() {
 	register_clcmd("amx_banhistorymenu", "cmdBanhistoryMenu", ADMIN_BAN, _T("- displays banhistorymenu"))
 	register_clcmd("amx_bandisconnectedmenu", "cmdBanDisconnectedMenu", ADMIN_BAN, _T("- displays bandisconnectedmenu"))
 	register_clcmd("amx_flaggingmenu","cmdFlaggingMenu",ADMIN_BAN, _T("- displays flagging menu"))
-	
-	pcvar_mode=register_cvar("amxbans_freeze_mode","abcd")
-	register_clcmd("say","handle_say")
-	register_clcmd("say_team","handle_say")
 	
 	register_srvcmd("amx_sethighbantimes", "setHighBantimes")
 	register_srvcmd("amx_setlowbantimes", "setLowBantimes")
@@ -176,20 +179,9 @@ public delayed_kick(player_id) {
 	return PLUGIN_CONTINUE
 }
 
-public handle_say(id) {
-	if(g_frozen[id] && (mode & 4)) return PLUGIN_HANDLED
-	return PLUGIN_CONTINUE
-}
-freeze_player(id) {
-	entity_set_vector(id,EV_VEC_velocity,Float:{0.0,0.0,0.0})
-	set_user_maxspeed(id, 0.1);
-	entity_set_int( id , EV_INT_flags , entity_get_int( id , EV_INT_flags ) | FL_FROZEN )
-}
-strip_player(id) {
-	strip_user_weapons(id);
-}
-glow_player(id) {
-	set_user_rendering(id,kRenderFxGlowShell,255,0,0,kRenderNormal,25)
+public client_connect(id)
+{
+	client_connect_freeze(id);
 }
 
 public event_new_round()
@@ -204,22 +196,6 @@ public event_new_round()
 			if(!is_user_connected(i) || is_user_bot(i)) continue
 			//player is banned, so select motd and kick him
 			select_amxbans_motd(0,i,g_nextround_kick_bid[i])
-			
-			//amxbans_freeze
-			new tmp[8]
-			get_cvarptr_string(pcvar_mode,tmp,charsmax(tmp))
-			mode=read_flags(tmp)
-			
-			g_frozen[i]=true;
-	
-			if(is_user_alive(i)) 
-			{
-				if(mode & 8) glow_player(i)
-				if(mode & 2) strip_player(i)
-				if(mode & 1) freeze_player(i)
-		
-			}
-			//
 		}
 	}
 }
@@ -249,56 +225,14 @@ public client_putinserver(id) {
 	return PLUGIN_CONTINUE
 }
 
-public client_connect(id) {
-	g_frozen[id]=false
-}
-
-public amxbans_player_flagged(id,sec_left,reas[]) {
-		
-	if(!is_user_connected(id)) return PLUGIN_HANDLED
-	if(sec_left) {
-		flagged_end[id]=get_systime()+sec_left
-	} else {
-		flagged_end[id]=-1 //permanent
-	}
-	
-	get_user_authid(id,authid[id],sizeof(authid[]))
-	get_user_ip(id,ip[id],sizeof(ip[]))
-	copy(reason[id],sizeof(reason[]),reas)
-	
-	set_task(10.0,"announce",id)
-	return PLUGIN_HANDLED
-}
-public amxbans_player_unflagged(id) {
-	if(task_exists(id)) remove_task(id)
-}
-public announce(id) {
-	new name[32],left_str[32]
-	get_user_name(id,name,sizeof(name))
-	
-	if(flagged_end[id]==-1) {
-		formatex(left_str,charsmax(left_str)," (%s)",_T("permanent"))
-	} else if(flagged_end[id]) {
-		new Float:left=float(flagged_end[id]-get_systime())/60
-		//if(left <= 0.1 && task_exists(id)) remove_task(id)
-		new left_int=floatround(left,floatround_ceil)
-		
-		formatex(left_str,charsmax(left_str)," (left: %d min)",left_int)
-		if(left_int) set_task(60.0,"announce",id)
-	}
-	//only show msg to admins with ADMIN_CHAT
-	for(new i=1;i<=g_iMaxPlayers;i++) {
-		if(!is_user_connected(i)) continue
-		if(get_user_flags(i) & ADMIN_CHAT)
-			client_print(i, print_chat, "[AMXBans] %s %s %s %s", _T("Player is under observation"),name,authid[id],reason[id])
-	}
-}
+public plugin_end()
+	mysql_close(g_SqlX);
 
 public client_disconnect(id)
 {
 	client_disconnect_core(id);
-	if(task_exists(id)) remove_task(id)
-	g_frozen[id]=false
+	client_disconnect_freeze(id);
+	client_disconnect_flagged(id);
 	g_being_banned[id]=false
 	
 	if(!g_kicked_by_amxbans[id]) {
