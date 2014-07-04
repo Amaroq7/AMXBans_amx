@@ -240,12 +240,12 @@ public cmd_ban_(id)
 			}
 			
 			new admin_nick[100], admin_steamid[50], admin_ip[20]
-			mysql_get_username_safe(id, admin_nick, 99)
 			get_user_ip(id, admin_ip, 19, 1)
 			
 			if (!serverCmd)
 			{
 				get_user_authid(id, admin_steamid, 49)
+				mysql_get_username_safe(id, admin_nick, 99)
 	
 				if ( get_cvarptr_num(pcvar_debug) >= 1 )
 					log_amx("[AMXBans cmdBan] Adminsteamid: %s, Servercmd: %s", admin_steamid, (serverCmd)?"Yes":"No")

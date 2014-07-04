@@ -44,12 +44,11 @@ public cmd_unban_1(id)
 	if (id == 0)
 		serverCmd = true;
 	
-	while(mysql_nextrow(g_SqlX)) {}
-	
 	new iRows = mysql_num_rows(g_SqlX);
 	
 	if (iRows == 1)
 	{
+		mysql_nextrow(g_SqlX);
 		new banid = mysql_getfield(g_SqlX, 1);
 		new admin_nick[100];
 			

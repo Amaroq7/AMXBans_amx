@@ -100,10 +100,7 @@ public fetchReasons_()
 {
 	new aNum, iRows;
 	
-	while(mysql_nextrow(g_SqlX) > 0)
-	{
-		++iRows;
-	}
+	new iRows = mysql_num_rows(g_SqlX);
 	
 	if(!iRows) {
 		server_print("[AMXBans] %s",_T("No Reasons found"))
@@ -134,7 +131,7 @@ public fetchReasons_()
 	{
 		new reason[128]
 		new reason_time
-		for(new i=0;i<iRows;i++)
+		while(mysql_nextrow(g_SqlX))
 		{
 			mysql_getfield(g_SqlX, 1, reason,charsmax(reason))
 			reason_time=mysql_getfield(g_SqlX,2)
