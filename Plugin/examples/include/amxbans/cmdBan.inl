@@ -215,7 +215,6 @@ public cmd_ban_(id)
 	
 	else
 	{
-		mysql_nextrow(g_SqlX);
 		if (!mysql_num_rows(g_SqlX))
 		{
 			if (g_choicePlayerId[id])
@@ -363,8 +362,6 @@ public _select_amxbans_motd(id, player, bid) {
 	new amxban_motd_url[256]
 	new admin_steamid[35], admin_nick[100],pl_steamid[35],pl_nick[100],pl_ip[22]
 	new ban_type[32],ban_reason[128],iBanLength
-	
-	mysql_nextrow(g_SqlX);
 	
 	if (!mysql_num_rows(g_SqlX)) {
 		amxban_motd_url[0]='^0'

@@ -35,13 +35,13 @@ check_flagged(id)
 
 public _check_flagged(id)
 {
-	if(!mysql_nextrow(g_SqlX))
+	if(!mysql_num_rows(g_SqlX))
 		return PLUGIN_HANDLED;
 		
 	new length, reason[128], created, fid, bool:flagged;
 	new cur_time = get_systime();
 	
-	do
+	while(mysql_nextrow(g_SqlX) > 0)
 	{
 		fid = mysql_getfield(g_SqlX, 1);
 		mysql_getfield(g_SqlX, 1, reason, charsmax(reason));
@@ -56,7 +56,7 @@ public _check_flagged(id)
 		{
 			remove_flagged(fid);
 		}
-	} while(mysql_nextrow(g_SqlX) > 0)
+	}
 	
 	if(!flagged)
 		return PLUGIN_HANDLED;

@@ -29,9 +29,9 @@ public banmod_online(id)
 		log_amx("[AMXBans] The server IP:PORT is: %s:%s", g_ip, g_port)
 	}
 	
-	new query = mysql_query(g_SqlX, "SELECT `motd_delay` FROM `%s%s` WHERE address = '%s:%s'", g_dbPrefix, tbl_serverinfo,g_ip,g_port);
+	mysql_query(g_SqlX, "SELECT `motd_delay` FROM `%s%s` WHERE address = '%s:%s'", g_dbPrefix, tbl_serverinfo,g_ip,g_port);
 
-	banmod_online_(id, query);
+	banmod_online_(id);
 }
 
 public banmod_online_(id,query)
@@ -41,8 +41,6 @@ public banmod_online_(id,query)
 	mysql_get_servername_safe(servername,charsmax(servername))
 	new modname[32]
 	get_modname(modname,charsmax(modname))
-	
-	mysql_nextrow(g_SqlX)
 	
 	if (!mysql_num_rows(g_SqlX)) {
 		if ( get_cvarptr_num(pcvar_debug) >= 1 ) {

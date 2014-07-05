@@ -33,6 +33,9 @@ public prebanned_check(id) {
 }
 public prebanned_check_(id)
 {
+	if(!mysql_num_rows(g_SqlX))
+		return PLUGIN_HANDLED;
+		
 	new ban_count=mysql_getfield(g_SqlX, 1)
 	
 	if(ban_count < get_cvarptr_num(pcvar_show_prebanned_num))
