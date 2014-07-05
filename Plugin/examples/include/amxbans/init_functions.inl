@@ -34,7 +34,7 @@ public banmod_online(id)
 	banmod_online_(id);
 }
 
-public banmod_online_(id,query)
+public banmod_online_(id)
 {
 	new timestamp = get_systime(0)
 	new servername[100]
@@ -96,7 +96,7 @@ public fetchReasons(id)
 
 public fetchReasons_()
 {
-	new aNum, iRows;
+	new aNum;
 	
 	new iRows = mysql_num_rows(g_SqlX);
 	
