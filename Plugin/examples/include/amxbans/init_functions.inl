@@ -41,7 +41,7 @@ public banmod_online_(id)
 	mysql_get_servername_safe(servername,charsmax(servername))
 	new modname[32]
 	get_modname(modname,charsmax(modname))
-	
+		
 	if (!mysql_num_rows(g_SqlX)) {
 		if ( get_cvarptr_num(pcvar_debug) >= 1 ) {
 			server_print("[AMXBans] INSERT INTO `%s%s` VALUES ('', %i,'%s', '%s:%s', '%s', '', '%s', '', '', '0')", g_dbPrefix, tbl_serverinfo, timestamp, servername, g_ip, g_port, modname, amxbans_version)
@@ -52,6 +52,7 @@ public banmod_online_(id)
 			(%i, '%s', '%s:%s', '%s', '%s', 1)", g_dbPrefix, tbl_serverinfo, timestamp, servername, g_ip, g_port, modname, amxbans_version)
 	} else {
 		new kick_delay_str[10]
+		mysql_nextrow(g_SqlX);
 		mysql_getfield(g_SqlX, 1, kick_delay_str, 9)
 
 		if (floatstr(kick_delay_str)>2.0) {
