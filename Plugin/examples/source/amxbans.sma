@@ -10,10 +10,10 @@
 // Rev 2010/04/13
 
 new const AUTHOR[] = "HLXBans Dev Team"
-new const PLUGIN_NAME[] = "AMXBans Main"
-new const VERSION[] = "6.0.3" // This is used in the plugins name
+new const PLUGIN_NAME[] = "AMXBans"
+new const VERSION[] = "0.0.1-alpha" // This is used in the plugins name
 
-new const amxbans_version[] = "6.0.3" // This is for the DB
+new const amxbans_version[] = "0.0.1-alpha" // This is for the DB
 
 #include <translator>
 #include <amxmod>
