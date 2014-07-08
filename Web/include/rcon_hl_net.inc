@@ -39,8 +39,8 @@ class Rcon
   //Constructor
   function Rcon()
   {
-    $this->challenge_number = 0; 
-    $this->connected = true; 
+    $this->challenge_number = 0;
+    $this->connected = true;
     $this->server_ip = ""; 
     $this->server_port = ""; 
     $this->server_password = "";
@@ -257,7 +257,7 @@ class Rcon
     //If there is no open connection return false
     if(!$this->connected)
       return $this->connected;
-
+	
     //send info command
     $command = "\xff\xff\xff\xffTSource Engine Query\x00";
     $buffer = $this->Communicate($command);
@@ -272,38 +272,72 @@ class Rcon
     //build info array
 	$pos=0;
     $result["type"] = $this->parse_buffer($buffer,$pos,"bytestr");
-	$result["version"] = $this->parse_buffer($buffer,$pos,"byte");
-	$result["name"] = $this->parse_buffer($buffer,$pos,"string");
-    $result["map"] = $this->parse_buffer($buffer,$pos,"string");
-    $result["mod"] = $this->parse_buffer($buffer,$pos,"string");
-    $result["game"] = $this->parse_buffer($buffer,$pos,"string");
-	$result["appid"] = $this->parse_buffer($buffer,$pos,"short");
-    $result["activeplayers"] = $this->parse_buffer($buffer,$pos,"byte");
-    $result["maxplayers"] = $this->parse_buffer($buffer,$pos,"byte");
-	$result["botplayers"] = $this->parse_buffer($buffer,$pos,"byte");
-	$result["dedicated"] = $this->parse_buffer($buffer,$pos,"bytestr");
-	$result["os"] = $this->parse_buffer($buffer,$pos,"bytestr");
-	$result["password"] = $this->parse_buffer($buffer,$pos,"byte");
-	$result["secure"] = $this->parse_buffer($buffer,$pos,"byte");
-	$result["sversion"] = $this->parse_buffer($buffer,$pos,"string");
-	$result["edf"] = $this->parse_buffer($buffer,$pos,"byte");
-	switch ($result["edf"]) {
-		case '\x80': // The server's game port # is included 
-			$result["port"]= $this->parse_buffer($buffer,$pos,"short");
-			break;
-		case '\x40': // The spectator port # and then the spectator server name are included 
-			$result["specport"]= $this->parse_buffer($buffer,$pos,"short");
-			$result["specservername"] = $this->parse_buffer($buffer,$pos,"string");
-			break;
-		case '\x20': // The game tag data string for the server is included [future use] 
-			$result["gametagdata"] = $this->parse_buffer($buffer,$pos,"string");
+	
+	if ($result["type"] == 'I')
+	{
+		$result["version"] = $this->parse_buffer($buffer,$pos,"byte");
+		$result["name"] = $this->parse_buffer($buffer,$pos,"string");
+		$result["map"] = $this->parse_buffer($buffer,$pos,"string");
+		$result["mod"] = $this->parse_buffer($buffer,$pos,"string");
+		$result["game"] = $this->parse_buffer($buffer,$pos,"string");
+		$result["appid"] = $this->parse_buffer($buffer,$pos,"short");
+		$result["activeplayers"] = $this->parse_buffer($buffer,$pos,"byte");
+		$result["maxplayers"] = $this->parse_buffer($buffer,$pos,"byte");
+		$result["botplayers"] = $this->parse_buffer($buffer,$pos,"byte");
+		$result["dedicated"] = $this->parse_buffer($buffer,$pos,"bytestr");
+		$result["os"] = $this->parse_buffer($buffer,$pos,"bytestr");
+		$result["password"] = $this->parse_buffer($buffer,$pos,"byte");
+		$result["secure"] = $this->parse_buffer($buffer,$pos,"byte");
+		$result["sversion"] = $this->parse_buffer($buffer,$pos,"string");
+		$result["edf"] = $this->parse_buffer($buffer,$pos,"byte");
+		switch ($result["edf"]) {
+			case '\x80': // The server's game port # is included 
+				$result["port"]= $this->parse_buffer($buffer,$pos,"short");
+				break;
+			case '\x40': // The spectator port # and then the spectator server name are included 
+				$result["specport"]= $this->parse_buffer($buffer,$pos,"short");
+				$result["specservername"] = $this->parse_buffer($buffer,$pos,"string");
+				break;
+			case '\x20': // The game tag data string for the server is included [future use] 
+				$result["gametagdata"] = $this->parse_buffer($buffer,$pos,"string");
+		}
 	}
+	else
+	{	
+		$result['adress'] = $this->parse_buffer($buffer,$pos,"string");
+		$result['name'] = $this->parse_buffer($buffer,$pos,"string");
+		$result['map'] = $this->parse_buffer($buffer,$pos,"string");
+		$result['mod'] = $this->parse_buffer($buffer,$pos,"string");
+		$result['game'] = $this->parse_buffer($buffer,$pos,"string");
+		$result['activeplayers'] = $this->parse_buffer($buffer,$pos,"byte");
+		$result['maxplayers'] = $this->parse_buffer($buffer,$pos,"byte");
+		$result['protocol'] = $this->parse_buffer($buffer,$pos,"byte");
+		$result['dedicated'] = $this->parse_buffer($buffer,$pos,"bytestr");
+		$result['os'] = $this->parse_buffer($buffer,$pos,"bytestr");
+		$result['password'] = $this->parse_buffer($buffer,$pos,"byte");
+		$result['modrunning'] = $this->parse_buffer($buffer,$pos,"byte");
+		$result['modurl'] = $this->parse_buffer($buffer,$pos,"string");
+		$this->parse_buffer($buffer,$pos,"byte");
+		$this->parse_buffer($buffer,$pos,"byte");
+		$this->parse_buffer($buffer,$pos,"byte");
+		$this->parse_buffer($buffer,$pos,"byte");
+		$this->parse_buffer($buffer,$pos,"byte");
+		$this->parse_buffer($buffer,$pos,"byte");
+		$this->parse_buffer($buffer,$pos,"byte");
+		$this->parse_buffer($buffer,$pos,"byte");
+		$this->parse_buffer($buffer,$pos,"byte");
+		$this->parse_buffer($buffer,$pos,"byte");
+		$result["secure"] = $this->parse_buffer($buffer,$pos,"byte");
+		$result["botplayers"] = $this->parse_buffer($buffer,$pos,"byte");
+	}
+	$this->Communicate("");
     //return formatted result
     return $result;
 
   } //function Info()
 
 	function parse_buffer($buffer,&$pos,$type) {
+		$result = '';
 		switch ($type) {
 			case 'string':
 					while ( substr($buffer, $pos,1) !== "\x00" )
@@ -402,7 +436,11 @@ class Rcon
     //If there is no open connection return false
     if(!$this->connected)
       return $this->connected;
-	  
+	
+	
+	$this->Communicate("");
+	
+	
 	if($this->challenge_number == "")
     {
       //send request of challenge number
