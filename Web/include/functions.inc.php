@@ -58,16 +58,16 @@ function validate_value($value,$type = "name",&$msg = "",$minsize=1,$maxsize=31,
 			if(!preg_match("/^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$/",$value)) { $msg="_IPINVALID"; return false; }
 			return true;
 			break;
-		case 'amxxaccess':
-			if(!preg_match("/^[a-u,z]{1,22}$/",$value)) { $msg="_ACCESSINVALID"; return false; }
+		case 'amxaccess':
+			if(!preg_match("/^[a-y,z]{1,25}$/",$value)) { $msg="_ACCESSINVALID"; return false; }
 			return true;
 			break;
-		case 'amxxflags':
+		case 'amxflags':
 			if((strrpos($value,"b")!==false && strrpos($value,"c")!==false)
 				|| (strrpos($value,"b")!==false && strrpos($value,"d")!==false)
 				|| (strrpos($value,"c")!==false && strrpos($value,"d")!==false)) { $msg="_FLAGSINVALID"; return false; }
 			if(strrpos($value,"a")===false && strrpos($value,"b")===false && strrpos($value,"c")===false && strrpos($value,"d")===false) { $msg="_FLAGSBCDMISSING"; return false; }
-			if(!preg_match("/^[a-e,k]{1,4}$/",$value)) { $msg="_FLAGSINVALID"; return false; }
+			if(!preg_match("/^[a-d,e]{1,2}$/",$value)) { $msg="_FLAGSINVALID"; return false; }
 			return true;
 			break;
 		default:

@@ -48,8 +48,8 @@
 		
 		if(!validate_value($username,"name",$error,3,31,"USERNAME")) $user_msg[]=$error;
 		if(strrpos($flags,"a")===true || strrpos($flags,"e")===false) if(!validate_value($password,"name",$error,4,31,"PASSWORD")) $user_msg[]=$error;
-		if(!validate_value($access,"amxxaccess",$error)) $user_msg[]=$error;
-		if(!validate_value($flags,"amxxflags",$error)) $user_msg[]=$error;
+		if(!validate_value($access,"amxaccess",$error)) $user_msg[]=$error;
+		if(!validate_value($flags,"amxflags",$error)) $user_msg[]=$error;
 		//validate steamid depending on flags (steamid, name, ip)
 		if(strrpos($flags,"b")!==false) { //clantag
 			if(!validate_value($steamid,"name",$error,1,30,"TAG")) $user_msg[]=$error;

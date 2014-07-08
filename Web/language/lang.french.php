@@ -145,12 +145,12 @@ define("_LOGINFAILED","Echec de la connexion!");
 define("_LOGINTRY","Essayer");
 define("_SEC","Seconde");
 define("_SECS","Secondes");
-//admins amxx
-define("_AMXADMINSETTINGS","Administration des admins d'AMX Mod X ");
+//admins amx
+define("_AMXADMINSETTINGS","Administration des admins d'AMX Mod ");
 define("_NAME","Nom");
 define("_NICKNAME","Pseudo");
-define("_MANAGEAMXADMINS","Administrateurs AMX Mod X");
-define("_ADDAMXADMINS","Ajouter des admins AMX Mod X");
+define("_MANAGEAMXADMINS","Administrateurs AMX Mod");
+define("_ADDAMXADMINS","Ajouter des admins AMX Mod");
 define("_ACCESS","Niveau");
 define("_FLAGS","Acc&egrave;s");
 define("_SETTINGS","Param&egrave;tres");
@@ -179,8 +179,8 @@ define("_SERVERRCON","Envoyer les commandes serveur (RCON)");
 define("_RCON_RELOADADMINS","Recharger les admins");
 define("_RCON_RESTARTMAP","Recharger la map et plugins");
 define("_RCON_STATUS","Status des commandes");
-define("_RCON_PLUGINS","Afficher la liste des plugins AMXX");
-define("_RCON_MODULES","Afficher la liste des modules AMXX");
+define("_RCON_PLUGINS","Afficher la liste des plugins AMX");
+define("_RCON_MODULES","Afficher la liste des modules AMX");
 define("_RCON_METALIST","Afficher la liste des Metamods");
 define("_RCON_PREDEFINED","Pr&eacute;d&eacute;fini");
 define("_RCON_USERDEFINED","Utilisateur d&eacute;fini");          //must check in context
@@ -267,11 +267,11 @@ define("_VERSION_BETA","Derni&egrave;re version beta");
 define("_LASTCHANGELOG","Historique des modifications"); 
 define("_WEB","Site web");
 define("_YOURWEB","Votre site web");
-define("_PLUGIN","Plugin AMX Mod X");
+define("_PLUGIN","Plugin AMX Mod");
 define("_UPDATE_RECOMMENDED","Mise &agrave; jour recommand&eacute;e!");
 define("_UPDATE_NOTNEEDED","Mise &agrave; jour non n&eacute;cessaire");
 define("_WEBUPDATE_RECOMMENDED","Mise &agrave; jour web recommand&eacute;e!");
-define("_PLUGINUPDATE_RECOMMENDED","Mise &agrave; jour du plugin AMX Mod X recommand&eacute;e!");
+define("_PLUGINUPDATE_RECOMMENDED","Mise &agrave; jour du plugin AMX Mod recommand&eacute;e!");
 //admin menu
 define("_MENUHOME","Page de d&eacute;marrage");  //must check in context
 define("_MENUMAINSERVER","Serveur");
@@ -352,9 +352,9 @@ define("_ACTIVBANEXISTS","Un ban actif existe d&eacute;j&agrave;!");
 //messages
 define("_BANADDSUCCESS","Ban ajout&eacute; avec succ&egrave;s");
 define("_BANEDITED","Ban enregistr&eacute;");
-define("_AMXADMINSAVESUCCESS","Les admins AMX Mod X ont &eacute;t&eacute; enregistr&eacute; avec succ&egrave;s");
-define("_AMXADMINDELETED","L'admin AMX Mod X a &eacute;t&eacute; supprim&eacute;");
-define("_AMXADMINADDED","L'admin AMX Mod X a &eacute;t&eacute; ajout&eacute;");
+define("_AMXADMINSAVESUCCESS","Les admins AMX Mod ont &eacute;t&eacute; enregistr&eacute; avec succ&egrave;s");
+define("_AMXADMINDELETED","L'admin AMX Mod a &eacute;t&eacute; supprim&eacute;");
+define("_AMXADMINADDED","L'admin AMX Mod a &eacute;t&eacute; ajout&eacute;");
 define("_NONAME","Nom manquant!");
 define("_NOFLAGS","Des niveaux manquent!");
 define("_NOSTEAM","Pas de SteamID pr&eacute;sent!");
@@ -450,7 +450,7 @@ define("_TITLEVIEW","Status des serveurs en temps r&eacute;el");
 define("_TITLEBANDETAIL","D&eacute;tails");
 define("_TITLEBANADD","Ajouter un ban");
 define("_TITLEBANADDONLINE","Ajouter un ban en temps r&eacute;el");
-define("_TITLEAMXADMINS","Admins AMX Mod X");
+define("_TITLEAMXADMINS","Admins AMX Mod");
 define("_TITLEREASONS","Raisons des bans");
 define("_TITLESERVERADMINS","Admins du serveur");
 define("_TITLESERVER","Serveur");
