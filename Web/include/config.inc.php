@@ -21,7 +21,7 @@
 */
 
 // setting version - DO NOT EDIT THIS
-$config->v_web = "0.0.1-alpha";
+$config->v_web = "0.0.2-alpha";
 
 // if necessary - calling install procedure
 if(file_exists("setup.php") && !file_exists("include/db.config.inc.php")) {
