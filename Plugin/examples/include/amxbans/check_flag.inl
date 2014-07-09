@@ -17,7 +17,7 @@ check_flagged(id)
 	if(g_being_flagged[id])
 		return PLUGIN_HANDLED;
 	
-	new authid[35], ip[22], pquery[1024];
+	new authid[35], ip[22];
 	get_user_authid(id, authid, charsmax(authid));
 	get_user_ip(id, ip, charsmax(ip), 1);
 	
@@ -41,21 +41,20 @@ public _check_flagged(id)
 	new length, reason[128], created, fid, bool:flagged;
 	new cur_time = get_systime();
 	
-	while(mysql_nextrow(g_SqlX) > 0)
-	{
-		fid = mysql_getfield(g_SqlX, 1);
-		mysql_getfield(g_SqlX, 1, reason, charsmax(reason));
-		created = mysql_getfield(g_SqlX, 3);
-		length = mysql_getfield(g_SqlX, 4);
+	mysql_nextrow(g_SqlX);
+	
+	fid = mysql_getfield(g_SqlX, 1);
+	mysql_getfield(g_SqlX, 1, reason, charsmax(reason));
+	created = mysql_getfield(g_SqlX, 3);
+	length = mysql_getfield(g_SqlX, 4);
 		
-		if(created + length * 60 > cur_time)
-		{
-			flagged = true;
-		}
-		else
-		{
-			remove_flagged(fid);
-		}
+	if(created + length * 60 > cur_time)
+	{
+		flagged = true;
+	}
+	else
+	{
+		remove_flagged(fid);
 	}
 	
 	if(!flagged)

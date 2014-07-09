@@ -36,6 +36,8 @@ public prebanned_check_(id)
 	if(!mysql_num_rows(g_SqlX))
 		return PLUGIN_HANDLED;
 		
+	mysql_nextrow(g_SqlX);
+		
 	new ban_count=mysql_getfield(g_SqlX, 1)
 	
 	if(ban_count < get_cvarptr_num(pcvar_show_prebanned_num))
@@ -46,7 +48,7 @@ public prebanned_check_(id)
 	get_user_name(id, name, 31)
 	
 	for(new i=1;i<=g_iMaxPlayers;i++) {
-		if(is_user_bot(i) || is_user_hltv(i) || !is_user_connected(i) || i==id) continue
+		if(i==id || is_user_bot(i) || is_user_hltv(i) || !is_user_connected(i)) continue
 		if(get_user_flags(i) & ADMIN_CHAT) {
 			client_print(i, print_chat, _T("[AMXBans] <%s> %s has been banned %i times before."), name, player_steamid, ban_count)
 		}
@@ -73,10 +75,12 @@ public check_player(id) {
 
 public check_player_(id)
 {
-	if(!mysql_nextrow(g_SqlX)) {
+	if(!mysql_num_rows(g_SqlX)) {
 		check_flagged(id)
 		return PLUGIN_HANDLED
 	}
+	
+	mysql_nextrow(g_SqlX);
 	
 	new ban_reason[128], admin_nick[100],admin_steamid[50],admin_ip[30],ban_type[4]
 	new player_nick[50],player_steamid[50],player_ip[30],server_name[100],server_ip[30]

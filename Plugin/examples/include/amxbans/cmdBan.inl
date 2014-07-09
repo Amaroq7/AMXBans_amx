@@ -52,7 +52,7 @@ public _cmdMenuBan(id, player)
 	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans cmdMenuBan function 2]Playerid: %d", player)
 	
-	if (mysql_nextrow(g_SqlX)) {
+	if (mysql_num_rows(g_SqlX)) {
 		client_print(id,print_console,"[AMXBANS] %s", _T("Player is already banned."))
 		g_being_banned[id] = false
 		return PLUGIN_HANDLED
@@ -374,6 +374,7 @@ public _select_amxbans_motd(id, player, bid) {
 		return PLUGIN_HANDLED
 		//copy(amxban_motd_url,256, "0")	
 	} else {
+		mysql_nextrow(g_SqlX);
 		mysql_getfield(g_SqlX, 1, amxban_motd_url, 256)
 		mysql_getfield(g_SqlX, 2, pl_nick, 99)
 		mysql_getfield(g_SqlX, 3, pl_steamid, 34)
