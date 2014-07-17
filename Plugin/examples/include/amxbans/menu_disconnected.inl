@@ -104,6 +104,8 @@ public disconnected_players_handler(id,key)
 		DisplayMenu_Disconnected(id, ++g_iPage[id])
 		return PLUGIN_HANDLED;
 	}
+	else if(key == 9)
+		return PLUGIN_HANDLED;
 	
 	g_iChoosedPlayer[id]=g_iPage[id]*7+key;
 	

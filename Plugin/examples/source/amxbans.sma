@@ -11,9 +11,9 @@
 
 new const AUTHOR[] = "HLXBans Dev Team"
 new const PLUGIN_NAME[] = "AMXBans"
-new const VERSION[] = "0.0.2-alpha" // This is used in the plugins name
+new const VERSION[] = "0.0.3-alpha" // This is used in the plugins name
 
-new const amxbans_version[] = "0.0.2-alpha" // This is for the DB
+new const amxbans_version[] = "0.0.3-alpha" // This is for the DB
 
 #include <translator>
 #include <amxmod>
@@ -42,7 +42,7 @@ new const amxbans_version[] = "0.0.2-alpha" // This is for the DB
 #include "amxbans/menu_ban.inl"
 #include "amxbans/menu_disconnected.inl"
 #include "amxbans/menu_history.inl"
-//#include "amxbans/menu_flag.inl"
+#include "amxbans/menu_flag.inl"
 #include "amxbans/cmdBan.inl"
 #include "amxbans/cmdUnban.inl"
 #include "amxbans/web_handshake.inl"
@@ -57,6 +57,8 @@ public plugin_init() {
 	plugin_init_freeze()
 	plugin_init_disconnected()
 	plugin_init_banmenu()
+	plugin_init_history()
+	plugin_init_flagging()
 	
 	register_plugin(PLUGIN_NAME, VERSION, AUTHOR)
 	register_cvar("amxbans_version", VERSION, FCVAR_SERVER|FCVAR_EXTDLL|FCVAR_UNLOGGED|FCVAR_SPONLY)
@@ -99,9 +101,9 @@ public plugin_init() {
 	pcvar_show_prebanned_num =	register_cvar("amxbans_show_prebanned_num","2")
 	pcvar_default_banreason	=	register_cvar("amxbans_default_ban_reason","unknown")
 	
-	register_concmd("amx_ban", "cmdBan", ADMIN_BAN, _T("<Time in Minutes> <SteamID | Nickname> <Reason>"))
-	register_concmd("amx_banip", "cmdBan", ADMIN_BAN, _T("<Time in Minutes> <SteamID | Nickname> <Reason>"))
-	register_concmd("amx_unban", "cmdUnban", ADMIN_BAN, _T("<steamID or IP>"));
+	register_concmd("amx_ban", "cmdBan", ADMIN_BAN, _T("<Time in Minutes> <SteamID | Nickname | #userid> <Reason> <SteamID> <IP>"))
+	register_concmd("amx_banip", "cmdBan", ADMIN_BAN, _T("<Time in Minutes> <SteamID | Nickname | #userid> <Reason> <SteamID> <IP>"))
+	register_concmd("amx_unban", "cmdUnban", ADMIN_UNBAN, _T("<steamID or IP>"));
 	
 	register_srvcmd("amx_list", "cmdLst", ADMIN_RCON, _T("sends playerinfos to web"))
 	
@@ -147,12 +149,6 @@ public amxbans_sql_initialized(sqlTuple,dbPrefix[])
 	return PLUGIN_HANDLED
 }
 //////////////////////////////////////////////////////////////////
-public get_higher_ban_time_admin_flag() {
-	new flags[24]
-	get_cvarptr_string(pcvar_higher_ban_time_admin, flags, 23)
-	
-	return(read_flags(flags))
-}
 public get_admin_mole_access_flag() {
 	new flags[24]
 	get_cvarptr_string(pcvar_admin_mole_access, flags, 23)

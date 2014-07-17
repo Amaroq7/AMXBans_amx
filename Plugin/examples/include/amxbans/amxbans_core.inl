@@ -82,12 +82,10 @@ new g_AdminUseStaticBantime[MAX_ADMINS];
 //multi forward handles
 new bool:g_isAdmin[33]
 
-new Handle:info
-new bool:g_bSqlInitialized
-
 public plugin_init_core()
 {
 	load_translations("amxbans");
+	load_translations("common");
 	amx_mode=register_cvar("amx_mode", "1")
 	amx_password_field=register_cvar("amx_password_field", "_pw")
 	amx_default_access=register_cvar("amx_default_access", "")
@@ -332,8 +330,6 @@ public adminSql()
 			accessUser(pv, name)
 		}
 		
-		g_bSqlInitialized=true
-		
 		new szPrefix[12];
 		get_cvarptr_string(pcvarprefix, szPrefix, 11);
 		amxbans_sql_initialized(sql, szPrefix);
@@ -399,8 +395,6 @@ public adminSql()
 	{
 		server_print(_T("[AMXBans] Loaded %d admins from database"), AdminCount)
 	}
-	
-	g_bSqlInitialized=true
 	
 	new szPrefix[12];
 	get_cvarptr_string(pcvarprefix, szPrefix, 11);

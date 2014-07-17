@@ -14,7 +14,7 @@
 
 new g_hMenuHistory;
 
-public plugin_init_hostory()
+public plugin_init_history()
 {
 	g_hMenuHistory = register_menuid("menu_history");
 	register_menucmd(g_hMenuHistory, MENU_KEY_ALL, "actionHistoryMenu")
@@ -55,6 +55,19 @@ public cmdBanhistoryMenu2(id,page)
 }
 public actionHistoryMenu(id,key)
 {
+	if(key == 7)
+	{
+		cmdBanMenu2(id, --g_iPage[id]);
+		return PLUGIN_HANDLED;
+	}
+	else if(key == 8)
+	{
+		cmdBanMenu2(id, ++g_iPage[id]);
+		return PLUGIN_HANDLED;
+	}
+	else if(key == 9)
+		return PLUGIN_HANDLED;
+		
 	new pid=g_iPlayers[id][g_iPage[id]*7+key];
 	
 	mysql_query(g_SqlX, "SELECT amxban_motd FROM `%s%s` WHERE address = '%s:%s'", g_dbPrefix, tbl_serverinfo, g_ip, g_port)

@@ -38,6 +38,17 @@ public cmdBanMenu(id,level,cid)
 	cmdBanMenu2(id, 0)
 	return PLUGIN_HANDLED
 }
+
+stock admin_high_bantime_values(const id)
+{
+	new szFlag[2];
+	get_cvarptr_string(pcvar_higher_ban_time_admin, szFlag, charsmax(szFlag));
+	
+	if(get_user_flags(id) & read_flags(szFlag))
+		return 1;
+	
+	return 0;
+}
 	
 public cmdBanMenu2(id, page)
 {
@@ -152,16 +163,18 @@ public actionBanMenu(id,key)
 		
 		return PLUGIN_HANDLED;
 	}
-	else if(key == 8)
+	else if(key == 7)
 	{
 		cmdBanMenu2(id, --g_iPage[id]);
 		return PLUGIN_HANDLED;
 	}
-	else if(key == 9)
+	else if(key == 8)
 	{
 		cmdBanMenu2(id, ++g_iPage[id]);
 		return PLUGIN_HANDLED;
 	}
+	else if(key == 9)
+		return PLUGIN_HANDLED;
 		
 	g_choicePlayerId[id]=g_iPlayers[id][g_iPage[id]*6+key-1];
 	
@@ -205,14 +218,26 @@ public cmdBantimeMenu(id, page)
 		loadDefaultBantimes(0)
 	}
 	
-	new szFlags[2];
-	get_cvarptr_string(pcvar_higher_ban_time_admin, szFlags, charsmax(szFlags));
-	
-	if(get_user_flags(id) & read_flags(szFlags))
+	if(admin_high_bantime_values(id))
 	{
 		for(new i=page*7;i < next_page(page, g_highbantimesnum, 7)*7;i++)
 		{
 			get_bantime_string(id,g_HighBanMenuValues[i],szDisplay,charsmax(szDisplay))
+			
+			keys |= (1<<b);
+			b++;
+			
+			if(g_coloredMenus)
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d.\w %s^n", b, szDisplay);
+			else
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n", b, szDisplay);
+		}
+	}
+	else
+	{
+		for(new i=page*7;i < next_page(page, g_lowbantimesnum, 7)*7;i++)
+		{
+			get_bantime_string(id,g_LowBanMenuValues[i],szDisplay,charsmax(szDisplay))
 			
 			keys |= (1<<b);
 			b++;
@@ -253,17 +278,23 @@ public cmdBantimeMenu(id, page)
 }
 public actionBantimeMenu(id,key)
 {
-	if(key == 8)
+	if(key == 7)
 	{
 		cmdBantimeMenu(id, --g_iPage[id]);
 		return PLUGIN_HANDLED;
 	}
-	else if(key == 9)
+	else if(key == 8)
 	{
 		cmdBantimeMenu(id, ++g_iPage[id]);
 		return PLUGIN_HANDLED;
 	}
-	g_choiceTime[id]=g_HighBanMenuValues[g_iPage[id]*7+key]
+	else if(key == 9)
+		return PLUGIN_HANDLED;
+		
+	if(admin_high_bantime_values(id))
+		g_choiceTime[id]=g_HighBanMenuValues[g_iPage[id]*7+key];
+	else
+		g_choiceTime[id]=g_LowBanMenuValues[g_iPage[id]*7+key];
 	
 	if(get_cvarptr_num(pcvar_debug) >= 2)
 		log_amx("[AMXBans BantimeMenu %d] %d choice: %d min",menu,id,g_choiceTime[id])
@@ -351,16 +382,18 @@ public cmdReasonMenu(id, page)
 }
 public actionReasonMenu(id,key)
 {
-	if(key == 8)
+	if(key == 7)
 	{
 		cmdReasonMenu(id, --g_iPage[id]);
 		return PLUGIN_HANDLED;
 	}
-	else if(key == 9)
+	else if(key == 8)
 	{
 		cmdReasonMenu(id, ++g_iPage[id]);
 		return PLUGIN_HANDLED;
 	}
+	else if(key == 9)
+		return PLUGIN_HANDLED;
 	
 	if(is_firstpage(g_iPage[id]) && !key)
 	{

@@ -92,15 +92,10 @@ public cmdBan(id, level, cid)
 	/* Checking if the admin has the right access */
 	if (!cmd_access(id,level,cid,3))
 		return PLUGIN_HANDLED
-
-	new bool:serverCmd = false
-	// Determine if this was a server command or a command issued by a player in the game
-	if ( id == 0 )
-		serverCmd = true;
 		
 	g_menuban_type[id] = 0
 	
-	new text[128]
+	new text[128], iBanDisconnected;
 	read_args(text, 127)
 	
 	// get player ident and bantime depending on the ban cmd format (old or new)
@@ -132,49 +127,61 @@ public cmdBan(id, level, cid)
 		formatex(cTimeLength, 127, _T("permanently", id))
 
 	// This stops admins from banning perm in console if not adminflag n
-	if(!(get_user_flags(id) & get_higher_ban_time_admin_flag()) && g_choiceTime[id] == 0)
+	if(!admin_high_bantime_values(id) && g_choiceTime[id] == 0)
 	{
 		client_print(id,print_console,"[AMXBans] %s", _T("You are not authorized to ban via Console."))
 		return PLUGIN_HANDLED
 	}
 
 	// Try to find the player that should be banned
-	g_choicePlayerId[id] = locate_player(id, g_ident)
-
-	// Player is a BOT or has immunity
-	if (g_choicePlayerId[id] == -1)
-		return PLUGIN_HANDLED
-		
-	if(g_being_banned[g_choicePlayerId[id]]) {
-		if ( get_cvarptr_num(pcvar_debug) >= 1 )
-			log_amx("[AMXBans Blocking doubleban(g_being_banned)] Playerid: %d BanLenght: %s Reason: %s", g_choicePlayerId[id], g_choiceTime[id], g_choiceReason[id])
-			
+	g_choicePlayerId[id] = CmdTargetExtra(id, g_ident, 11, true) //obey immunity|allow yourself|can't be bot
+	
+	if(!g_choicePlayerId[id]) // no valid player found among the specified/connected (or action can't be performed on him [immunity, etc.])
+	{
+		g_being_banned[0]=false
 		return PLUGIN_HANDLED
 	}
-	
-	g_being_banned[g_choicePlayerId[id]] = true
-	
-	if ( get_cvarptr_num(pcvar_debug) >= 1 )
-		log_amx("[AMXBans cmdBan function 1]Playerid: %d", g_choicePlayerId[id])
-
-	if (g_choicePlayerId[id])
+		
+	else if(g_choicePlayerId[id] == -1)
 	{
-		get_user_authid(g_choicePlayerId[id], g_choicePlayerAuthid[id], 49)
-		get_user_ip(g_choicePlayerId[id], g_choicePlayerIp[id], 29, 1)
+		iBanDisconnected = 1;
+		g_being_banned[0]=false
+		
+		new szIP[25], szAuthid[35];
+		
+		read_argv(4, szAuthid, charsmax(szAuthid));
+		read_argv(5, szIP, charsmax(szIP));
+		
+		if(!strlen(szAuthid) && !strlen(szIP))
+		{
+			console_print(id, _T("You must pass Authid or IP."));
+			return PLUGIN_HANDLED;
+		}
+		
+		formatex(g_choicePlayerName[id], charsmax(g_choicePlayerName[]), g_ident);
+		formatex(g_choicePlayerIp[id], charsmax(g_choicePlayerIp[]), szIP);
+		formatex(g_choicePlayerAuthid[id], charsmax(g_choicePlayerAuthid[]), szAuthid);
 	}
 	else
 	{
-		g_being_banned[0]=false
-		
-		if (serverCmd)
-			server_print(_T("[AMXBans] Player %s was not found"),g_ident)
-		else
-			console_print(id, _T("[AMXBans] Player %s was not found"),g_ident)
-
-		if ( get_cvarptr_num(pcvar_debug) >= 1 )
-			log_amx(_T("[AMXBans] Player %s could not be found"),g_ident)
+		if(g_being_banned[g_choicePlayerId[id]])
+		{
+			if ( get_cvarptr_num(pcvar_debug) >= 1 )
+				log_amx("[AMXBans Blocking doubleban(g_being_banned)] Playerid: %d BanLenght: %s Reason: %s", g_choicePlayerId[id], g_choiceTime[id], g_choiceReason[id])
 				
-		return PLUGIN_HANDLED
+			return PLUGIN_HANDLED
+		}
+	
+		g_being_banned[g_choicePlayerId[id]] = true
+	
+		if ( get_cvarptr_num(pcvar_debug) >= 1 )
+			log_amx("[AMXBans cmdBan function 1]Playerid: %d", g_choicePlayerId[id])
+
+		if (g_choicePlayerId[id])
+		{
+			get_user_authid(g_choicePlayerId[id], g_choicePlayerAuthid[id], 49)
+			get_user_ip(g_choicePlayerId[id], g_choicePlayerIp[id], 29, 1)
+		}
 	}
 
 	if(!get_ban_type(g_ban_type[id],charsmax(g_ban_type[]),g_choicePlayerAuthid[id],g_choicePlayerIp[id])) {
@@ -199,11 +206,11 @@ public cmdBan(id, level, cid)
 	}
 	
 	mysql_query(g_SqlX, pquery);
-	cmd_ban_(id);
+	cmd_ban_(id, iBanDisconnected);
 	
 	return PLUGIN_HANDLED
 }
-public cmd_ban_(id)
+public cmd_ban_(id, ban_disconnected)
 {
 	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans cmd_ban_ function 2]Playerid: %d", g_choicePlayerId[id])
@@ -221,7 +228,7 @@ public cmd_ban_(id)
 			{
 				get_user_name(g_choicePlayerId[id], g_choicePlayerName[id], charsmax(g_choicePlayerName[]))
 			}
-			else /* The player was not found in server */
+			else if(g_choicePlayerId[id] && !ban_disconnected) /* The player was not found in server */
 			{
 				// Must make that false to be able to ban another player not on the server
 				// Players that aren't in the server always get id = 0
@@ -293,7 +300,8 @@ public cmd_ban_(id)
 				g_dbPrefix, tbl_bans, g_choicePlayerAuthid[id], g_choicePlayerIp[id], player_nick, admin_ip, admin_steamid, admin_nick, g_ban_type[id], \
 				g_choiceReason[id], g_choiceTime[id], server_name, g_ip, g_port);
 		
-			insert_bandetails(id, g_choicePlayerId[id]);
+			if(!ban_disconnected)
+				insert_bandetails(id, g_choicePlayerId[id]);
 			
 		}
 		else
@@ -698,52 +706,6 @@ public _select_amxbans_motd(id, player, bid) {
 	}
 
 	return PLUGIN_HANDLED
-}
-
-public locate_player(id, identifier[])
-{
-	g_ban_type[id] = "S"
-
-	// Check based on steam ID
-	new player = find_player("c", identifier)
-
-	// Check based on a partial non-case sensitive name
-	if (!player) {
-		player = find_player("bl", identifier)
-	}
-	// Check based on IP address
-	if (!player) {
-		player = find_player("d", identifier)
-		if ( player )
-			g_ban_type[id] = "SI"
-	}
-	// Check based on user ID
-	if ( !player && identifier[0]=='#' && identifier[1] ) {
-		player = find_player("k",str_to_num(identifier[1]))
-	}
-
-	if ( player ) {
-		/* Check for immunity */
-		if (get_user_flags(player) & ADMIN_IMMUNITY) {
-			if( id == 0 )
-				server_print(_T("This player has immunity"))
-			else
-				console_print(id,_T("This player has immunity"))
-			return -1
-		}
-		/* Check for a bot */
-		else if (is_user_bot(player)) {
-			if( id == 0 )
-				server_print(_T("This player is a Bot"))
-			else
-				console_print(id,_T("This player is a Bot"))
-			return -1
-		}
-	} else {
-		// add function for disconnected players, maybe later ^^
-		return -1
-	}
-	return player
 }
 
 //Credits go to AMX Mod Dev.

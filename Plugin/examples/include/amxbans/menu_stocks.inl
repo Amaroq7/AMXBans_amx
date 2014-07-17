@@ -68,55 +68,6 @@ reset_pos(array[][], size, &var)
 }
 
 /*******************************************************************************************************************/
-/*stock MenuGetPlayers(menu,callback) {
-	new plnum = get_maxplayers()
-	new szID[3],count
-	
-	for(new i=1;i <= plnum;i++) {
-		if(!is_user_connected(i)) continue
-		count++
-		get_user_name(i,g_PlayerName[i],charsmax(g_PlayerName[]))
-		num_to_str(i,szID,charsmax(szID))
-		menu_additem(menu,g_PlayerName[i],szID,0,callback)
-	}
-}
-
-stock MenuGetBantime(id,menu) {
-	if(!g_highbantimesnum || !g_lowbantimesnum) {
-		log_amx("[AMXBans Notice] High or Low Bantimes empty, loading defaults")
-		loadDefaultBantimes(0)
-	}
-	
-	new szDisplay[128],szTime[11]
-	// Admins with flag n or what HIGHER_BAN_TIME_ADMIN is set to, will get the higher ban times
-	if (get_user_flags(id) & get_higher_ban_time_admin_flag()) {
-		for(new i;i < g_highbantimesnum;i++) {
-			get_bantime_string(id,g_HighBanMenuValues[i],szDisplay,charsmax(szDisplay))
-			num_to_str(g_HighBanMenuValues[i],szTime,charsmax(szTime))
-			menu_additem(menu,szDisplay,szTime)
-		}
-	} else {
-		for(new i;i < g_lowbantimesnum;i++) {
-			get_bantime_string(id,g_LowBanMenuValues[i],szDisplay,charsmax(szDisplay))
-			num_to_str(g_LowBanMenuValues[i],szTime,charsmax(szTime))
-			menu_additem(menu,szDisplay,szTime)
-		}
-	}
-}
-stock MenuGetFlagtime(id,menu) {
-	if(!g_flagtimesnum) {
-		log_amx("[AMXBans Notice] Flagtimes empty, loading defaults")
-		loadDefaultBantimes(3)
-	}
-	
-	new szDisplay[128],szTime[11]
-	for(new i;i < g_flagtimesnum;i++) {
-		get_flagtime_string(id,g_FlagMenuValues[i],szDisplay,charsmax(szDisplay))
-		num_to_str(g_FlagMenuValues[i],szTime,charsmax(szTime))
-		menu_additem(menu,szDisplay,szTime)
-	}
-}*/
-/*******************************************************************************************************************/
 stock get_bantime_string(id,btime,text[],len)
 {
 	if(btime <=0)
@@ -130,46 +81,35 @@ stock get_bantime_string(id,btime,text[],len)
 		formatex(text,len,_T("Ban for %s",id),szTime)
 	}
 }
-/*stock get_flagtime_string(id,btime,text[],len,without=0) {
-	if(btime <=0 ) {
-		if(!without) {
-			formatex(text,len,"%L",id,"FLAG_PERMANENT")
-		} else {
-			formatex(text,len,"%L",id,"PERMANENT")
+stock get_flagtime_string(id,btime,text[],len,without=0)
+{
+	if(btime <=0 )
+	{
+		if(!without)
+		{
+			formatex(text,len,_T("Flag permanent",id))
 		}
-	} else {
-		if(!without) {
+		else
+		{
+			formatex(text,len,_T("permanently",id))
+		}
+	}
+	else
+	{
+		if(!without)
+		{
 			new szText[128]
 			get_time_length(id,btime,timeunit_minutes,szText,charsmax(szText))
-			formatex(text,len,"%L",id,"FLAG_FOR_MINUTES",szText)
-		} else {
+			formatex(text,len,_T("Flag for %s",id),szText)
+		}
+		else
+		{
 			get_time_length(id,btime,timeunit_minutes,text,len)
 		}
 	}
-}*/
-/*******************************************************************************************************************/
-/*
-user_viewing_menu() {
-	new menu,newmenu,menupage
-	new pnum=get_maxplayers()
-	for(new i=1;i<=pnum;i++) {
-		if(!is_user_connected(i) || is_user_bot(i) || is_user_hltv(i)) continue
-		
-		if(player_menu_info(i,menu,newmenu,menupage)) {
-			if(newmenu != -1) {
-				client_print(i,print_chat,"[AMXBans] %L", LANG_PLAYER, "UPDATE_MENU", newmenu,menupage)
-				menu_destroy(newmenu)
-				menu_display(i,newmenu,menupage)
-			} 
-		}else {
-			client_print(i,print_chat,"[AMXBans] %L", LANG_PLAYER, "NO_MENU_OPENED")
-			
-		}
-	}
 }
-*/
 /*******************************************************************************************************************/
-/*public setCustomBanReason(id,level,cid)
+public setCustomBanReason(id,level,cid)
 {
 	if (!cmd_access(id,level,cid,1)) {
 		return PLUGIN_HANDLED
@@ -183,17 +123,22 @@ user_viewing_menu() {
 	
 	set_custom_reason[id]=false
 	
-	if(get_pcvar_num(pcvar_debug) >= 2)
+	if(get_cvarptr_num(pcvar_debug) >= 2)
 		log_amx("[AMXBans CustomReason] %d choice: %s (%d min)",id,g_choiceReason[id],g_choiceTime[id])
 	
-	if(g_in_flagging[id]){
+	if(g_in_flagging[id])
+	{
 		g_in_flagging[id]=false
 		FlagPlayer(id)
-	} else if(g_choicePlayerId[id] == -1) {
+	}
+	else if(g_choicePlayerId[id] == -1)
+	{
 		//disconnected ban
 		cmdMenuBanDisc(id)
-	} else {
+	}
+	else
+	{
 		cmdMenuBan(id)
 	}
 	return PLUGIN_HANDLED
-}*/
+}
