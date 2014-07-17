@@ -82,7 +82,7 @@ public select_motd_history(id, pid)
 	{
 		new url[256],lang[5],title[128]
 		
-		formatex(title,charsmax(title),_T("Banhistory of %s"id),name)
+		formatex(title,charsmax(title),_T("Banhistory of %s",id),name)
 		
 		get_user_info(id,"lang",lang,charsmax(lang))
 		if(equal(lang,""))

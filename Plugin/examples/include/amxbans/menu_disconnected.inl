@@ -197,9 +197,9 @@ public _cmdMenuBanDisc(id)
 	
 	if(--g_iAddedPlayers != 0) //Move entries if array is not clear
 	{
-		move_array(g_disconPLauthid, MAX_DISCONNECTED_PLAYERS, g_iPos);
-		move_array(g_disconPLip, MAX_DISCONNECTED_PLAYERS, g_iPos);
-		move_array(g_disconPLname, MAX_DISCONNECTED_PLAYERS, g_iPos);
+		move_array(g_disconPLauthid, charsmax(g_disconPLauthid[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+		move_array(g_disconPLip, charsmax(g_disconPLip[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+		move_array(g_disconPLname, charsmax(g_disconPLname[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
 	}
 	
 	mysql_query(g_SqlX, "INSERT INTO `%s%s` (player_id,player_ip,player_nick,admin_ip,admin_id,admin_nick,ban_type,ban_reason,ban_created,ban_length,server_name,server_ip,expired) \
@@ -245,9 +245,9 @@ disconnect_remove_player(id)
 		
 		if(--g_iAddedPlayers != 0)
 		{
-			move_array(g_disconPLauthid, MAX_DISCONNECTED_PLAYERS, g_iPos);
-			move_array(g_disconPLip, MAX_DISCONNECTED_PLAYERS, g_iPos);
-			move_array(g_disconPLname, MAX_DISCONNECTED_PLAYERS, g_iPos);
+			move_array(g_disconPLauthid, charsmax(g_disconPLauthid[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+			move_array(g_disconPLip, charsmax(g_disconPLip[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+			move_array(g_disconPLname, charsmax(g_disconPLname[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
 		}
 		
 		break;
@@ -265,26 +265,26 @@ disconnected_add_player(id)
 	get_user_authid(id,authid,charsmax(authid))
 	get_user_ip(id,ip,charsmax(ip),1)
 	
-	ArrayPushString(g_disconPLname,name, 1)
-	ArrayPushString(g_disconPLauthid,authid, 0)
-	ArrayPushString(g_disconPLip,ip, 0)
+	ArrayPushString(g_disconPLname, charsmax(g_disconPLname[]), name, 1)
+	ArrayPushString(g_disconPLauthid, charsmax(g_disconPLip[]), authid, 0)
+	ArrayPushString(g_disconPLip, charsmax(g_disconPLname[]), ip, 0)
 	
-	move_array(g_disconPLauthid, MAX_DISCONNECTED_PLAYERS, g_iPos);
-	move_array(g_disconPLip, MAX_DISCONNECTED_PLAYERS, g_iPos);
-	move_array(g_disconPLname, MAX_DISCONNECTED_PLAYERS, g_iPos);
+	move_array(g_disconPLauthid, charsmax(g_disconPLauthid[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+	move_array(g_disconPLip, charsmax(g_disconPLip[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+	move_array(g_disconPLname, charsmax(g_disconPLname[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
 	
 	g_iAddedPlayers++;
 	
 	return PLUGIN_CONTINUE
 }
 
-ArrayPushString(array[][], string[], inc)
+ArrayPushString(array[][], array_size, string[], inc)
 {
 	if(g_iPos >= MAX_DISCONNECTED_PLAYERS)
 	{
 		g_iPos = 0;
 	}
-	formatex(array[g_iPos], charsmax(array[]), string);
+	formatex(array[g_iPos], array_size-1, string);
 	
 	if(inc)
 		g_iPos++;

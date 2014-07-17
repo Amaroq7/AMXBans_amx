@@ -9,11 +9,11 @@
 
 /*Values to increase*/
 
-/*/////////////////*/
+/////////////////////
 #define MAX_REASONS 25
 #define MAX_ADMINS 128
 #define MAX_DISCONNECTED_PLAYERS 15
-/*/////////////////*/
+////////////////////
 
 //db table defines, no need to change something
 new const tbl_serverinfo[] = "_serverinfo";

@@ -35,16 +35,16 @@ stock is_firstpage(page)
 	return (!page) ? 1 : 0;
 }
 
-move_array(array[][], size, &position)
+move_array(array[][], array_size, size, &position)
 {
-	new bool:empty;
+	new bool:empty, pos;
 	for(new i=0;i<size;i++)
 	{
 		if(empty && strlen(array[i]))
 		{
-			new pos = i;
-			formatex(array[--pos], charsmax(array[]), array[i]);
-			formatex(array[i], charsmax(array[]), "");
+			pos = i;
+			formatex(array[--pos], array_size-1, array[i]);
+			formatex(array[i], array_size-1, "");
 			empty = true;
 		}
 		else if(!strlen(array[i]))

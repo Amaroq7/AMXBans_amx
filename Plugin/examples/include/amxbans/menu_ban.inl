@@ -150,7 +150,7 @@ public actionBanMenu(id,key)
 			
 		cmdBanMenu2(id, g_iPage[id]);
 		
-		return PLAYER_HANDLED;
+		return PLUGIN_HANDLED;
 	}
 	else if(key == 8)
 	{
@@ -160,7 +160,7 @@ public actionBanMenu(id,key)
 	else if(key == 9)
 	{
 		cmdBanMenu2(id, ++g_iPage[id]);
-		return PLAYER_HANDLED;
+		return PLUGIN_HANDLED;
 	}
 		
 	g_choicePlayerId[id]=g_iPlayers[id][g_iPage[id]*6+key-1];
@@ -192,7 +192,7 @@ public actionBanMenu(id,key)
 }
 public cmdBantimeMenu(id, page)
 {
-	new iLen, b, keys = MENU_KEY_0;
+	new iLen, b, keys = MENU_KEY_0, szDisplay[128];
 	
 	if(g_coloredMenus)
 		iLen += formatex(menu, charsmax(menu), "\r%s\w^n^n", _T("Bantime Menu", id))
@@ -261,7 +261,7 @@ public actionBantimeMenu(id,key)
 	else if(key == 9)
 	{
 		cmdBantimeMenu(id, ++g_iPage[id]);
-		return PLAYER_HANDLED;
+		return PLUGIN_HANDLED;
 	}
 	g_choiceTime[id]=g_HighBanMenuValues[g_iPage[id]*7+key]
 	
@@ -275,7 +275,7 @@ public actionBantimeMenu(id,key)
 }
 public cmdReasonMenu(id, page)
 {
-	new iLen, b, keys = MENU_KEY_0;
+	new iLen, b, keys = MENU_KEY_0, szDisplay[128], szTime[64]
 	new custom_static_time = get_cvarptr_num(pcvar_custom_statictime)
 	
 	if(g_coloredMenus)
@@ -316,7 +316,7 @@ public cmdReasonMenu(id, page)
 				
 			if(g_iAdminUseStaticBantime[id])
 			{
-				get_bantime_string(id,ArrayGetCell(g_banReasons_Bantime,i),szTime,charsmax(szTime))
+				get_bantime_string(id,g_banReasons_Bantime[i],szTime,charsmax(szTime))
 				format(szDisplay,charsmax(szDisplay),"%s (%s)",szDisplay,szTime)
 			} 
 		}
@@ -359,7 +359,7 @@ public actionReasonMenu(id,key)
 	else if(key == 9)
 	{
 		cmdReasonMenu(id, ++g_iPage[id]);
-		return PLAYER_HANDLED;
+		return PLUGIN_HANDLED;
 	}
 	
 	if(is_firstpage(g_iPage[id]) && !key)
