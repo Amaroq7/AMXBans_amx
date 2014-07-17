@@ -12,6 +12,8 @@
 #endif
 #define _init_functions_included
 
+new g_iLoadedReasons;
+
 /*********************  Banmod online  ********************/
 public banmod_online(id)
 {
@@ -80,7 +82,8 @@ public banmod_online_(id)
 public cmdFetchReasons(id,level,cid) {
 	if (!cmd_access(id,level,cid,1))
 		return PLUGIN_HANDLED
-		
+	
+	g_iLoadedReasons = 0;
 	fetchReasons(id)
 	return PLUGIN_HANDLED
 }
@@ -97,8 +100,6 @@ public fetchReasons(id)
 
 public fetchReasons_()
 {
-	new aNum;
-	
 	new iRows = mysql_num_rows(g_SqlX);
 	
 	if(!iRows) {
@@ -122,7 +123,7 @@ public fetchReasons_()
 		server_print("[AMXBans] %s", _T("No Reasons found in Database. Static reasons were loaded instead."))
 		log_amx("[AMXBans] %s",_T("No Reasons found in Database. Static reasons were loaded instead."))
 
-		aNum = 7
+		g_iLoadedReasons = 7
 
 		return PLUGIN_HANDLED
 	} 
@@ -134,16 +135,16 @@ public fetchReasons_()
 		{
 			mysql_getfield(g_SqlX, 1, reason,charsmax(reason))
 			reason_time=mysql_getfield(g_SqlX,2)
-			ArrayPushReasons(aNum,reason,reason_time)
+			ArrayPushReasons(g_iLoadedReasons,reason,reason_time)
 			mysql_nextrow(g_SqlX)
-			aNum++
+			g_iLoadedReasons++
 		}
 	}
 	
-	if (aNum == 1)
+	if (g_iLoadedReasons == 1)
 		server_print(_T("[AMXBans] 1 Reason loaded from Database.") )
 	else
-		server_print(_T("[AMXBans] %d Reasons loaded from Database."), aNum )
+		server_print(_T("[AMXBans] %d Reasons loaded from Database."), g_iLoadedReasons )
 	
 	return PLUGIN_HANDLED
 }

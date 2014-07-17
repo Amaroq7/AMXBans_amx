@@ -38,10 +38,10 @@ new const amxbans_version[] = "0.0.2-alpha" // This is for the DB
 #include "amxbans/init_functions.inl"
 #include "amxbans/check_player.inl"
 #include "amxbans/check_flag.inl"
-//#include "amxbans/menu_stocks.inl"
-//#include "amxbans/menu_ban.inl"
-//#include "amxbans/menu_disconnected.inl"
-//#include "amxbans/menu_history.inl"
+#include "amxbans/menu_stocks.inl"
+#include "amxbans/menu_ban.inl"
+#include "amxbans/menu_disconnected.inl"
+#include "amxbans/menu_history.inl"
 //#include "amxbans/menu_flag.inl"
 #include "amxbans/cmdBan.inl"
 #include "amxbans/cmdUnban.inl"
@@ -55,6 +55,9 @@ new const amxbans_version[] = "0.0.2-alpha" // This is for the DB
 public plugin_init() {
 	plugin_init_core()
 	plugin_init_freeze()
+	plugin_init_disconnected()
+	plugin_init_banmenu()
+	
 	register_plugin(PLUGIN_NAME, VERSION, AUTHOR)
 	register_cvar("amxbans_version", VERSION, FCVAR_SERVER|FCVAR_EXTDLL|FCVAR_UNLOGGED|FCVAR_SPONLY)
 	
@@ -82,7 +85,6 @@ public plugin_init() {
 	
 	pcvar_serverip		=	register_cvar("amxbans_server_address","")
 	pcvar_server_nick 	= 	register_cvar("amxbans_servernick", "")
-	pcvar_discon_in_banlist	=	register_cvar("amxbans_discon_players_saved","10")
 	pcvar_complainurl	= 	register_cvar("amxbans_complain_url", "www.yoursite.com") // Dont use http:// then the url will not show
 	pcvar_debug 		= 	register_cvar("amxbans_debug", "0") // Set this to 1 to enable debug
 	pcvar_add_mapname	=	register_cvar("amxbans_add_mapname_in_servername", "0")
@@ -217,8 +219,12 @@ public client_putinserver(id) {
 	}
 	//check if the player was banned before
 	prebanned_check(id)
+	
+	#if defined MAX_DISCONNECTED_PLAYERS
 	//remove the player from the disconnect player list because he is already connected ;-)
-	//disconnect_remove_player(id)
+	disconnect_remove_player(id)
+	#endif
+	
 	return PLUGIN_CONTINUE
 }
 
@@ -233,8 +239,10 @@ public client_disconnect(id)
 	g_being_banned[id]=false
 	
 	if(!g_kicked_by_amxbans[id]) {
+		#if defined MAX_DISCONNECTED_PLAYERS
 		//only add players to disconnect list if not kicked by amxbans
-		//disconnected_add_player(id)
+		disconnected_add_player(id)
+		#endif
 	} else if(g_being_flagged[id]) {
 		// if kicked by amxbans maybe remove the flagged, not added yet
 		/*****///remove_flagged_by_steam(0,id,0)

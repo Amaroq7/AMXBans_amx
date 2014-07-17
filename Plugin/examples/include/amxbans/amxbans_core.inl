@@ -41,8 +41,6 @@
 
 new AdminCount;
 
-#define MAX_ADMINS 128
-
 enum AdminProp
 {
 	AdminProp_Auth = 0,

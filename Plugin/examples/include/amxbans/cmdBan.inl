@@ -745,3 +745,86 @@ public locate_player(id, identifier[])
 	}
 	return player
 }
+
+//Credits go to AMX Mod Dev.
+CmdTargetExtra(const id, const szArg[], const iFlags = 3, const bool:bExtraFeature = false)
+{
+	new iPlayer = find_player("bl", szArg)
+	if(iPlayer)
+	{
+		if(iPlayer != find_player("blj", szArg))
+		{
+			#if defined _translator_included
+			console_print(id, _T("There is more than one client matching your argument."))
+			#else
+			console_print(id, "There is more than one client matching your argument.")
+			#endif
+			return 0
+		}
+	}
+	else if((iPlayer = find_player("c", szArg)) == 0 && (iPlayer = find_player("d", szArg)) == 0 && szArg[0] == '#' && szArg[1])
+	{
+		iPlayer = find_player("k", strtonum(szArg[1]))
+	}
+	if(!iPlayer)
+	{
+		#if defined _translator_included
+		if(bExtraFeature == false) console_print(id, _T("Client with that name or userid not found."))
+		#else
+		if(bExtraFeature == false) console_print(id, "Player with that name or userid not found.")
+		#endif
+		return bExtraFeature ? -1 : 0
+	}
+	if((iFlags & 2) == 0 && (iPlayer == id))
+	{
+		#if defined _translator_included
+		console_print(id, _T("That action can't be performed on yourself."))
+		#else
+		console_print(id, "That action can't be performed on yourself.")
+		#endif
+		return 0
+	}
+	if(iFlags & 1)
+	{
+		if((iPlayer != id) && (get_user_flags(iPlayer) & ADMIN_IMMUNITY) && !(get_user_flags(id) & ADMIN_SUPREME))
+		{
+			new szPlayerName[32]
+			get_user_name(iPlayer, szPlayerName, charsmax(szPlayerName))
+			#if defined _translator_included
+			console_print(id, _T("Client ^"%s^" has immunity."), szPlayerName)
+			#else
+			console_print(id, "Client ^"%s^" has immunity.", szPlayerName)
+			#endif
+			return 0
+		}
+	}
+	if(iFlags & 4) 
+	{
+		if(!is_user_alive(iPlayer))
+		{
+			new szPlayerName[32]
+			get_user_name(iPlayer, szPlayerName, charsmax(szPlayerName))
+			#if defined _translator_included
+			console_print(id, _T("That action can't be performed on dead client ^"%s^"."), szPlayerName)
+			#else
+			console_print(id, "That action can't be performed on dead client ^"%s^".", szPlayerName)
+			#endif
+			return 0
+		}
+	}
+	if(iFlags & 8)
+	{
+		if(is_user_bot(iPlayer))
+		{
+			new szPlayerName[32]
+			get_user_name(iPlayer, szPlayerName, charsmax(szPlayerName))
+			#if defined _translator_included
+			console_print(id, _T("That action can't be performed on bot ^"%s^"."), szPlayerName)
+			#else
+			console_print(id, "That action can't be performed on bot ^"%s^".", szPlayerName)
+			#endif
+			return 0
+		}
+	}
+	return iPlayer
+}

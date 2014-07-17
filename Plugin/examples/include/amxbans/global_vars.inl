@@ -7,6 +7,14 @@
 
 */
 
+/*Values to increase*/
+
+/*/////////////////*/
+#define MAX_REASONS 25
+#define MAX_ADMINS 128
+#define MAX_DISCONNECTED_PLAYERS 15
+/*/////////////////*/
+
 //db table defines, no need to change something
 new const tbl_serverinfo[] = "_serverinfo";
 new const tbl_reasons[] = "_reasons";
@@ -23,6 +31,7 @@ new bool:g_being_banned[33];
 new bool:g_supported_game = true;
 new g_iMaxPlayers;
 new pquery[1024];
+new menu[512];
 
 // Variables for menus
 new g_coloredMenus;
@@ -45,8 +54,6 @@ new g_choiceReason[33][128];
 new g_ban_type[33][3];
 new g_ident[50];
 
-#define MAX_REASONS 25
-
 new g_banReasons[MAX_REASONS][128];
 new g_banReasons_Bantime[MAX_REASONS];
 
@@ -61,7 +68,6 @@ new g_flaggedTime[33];
 
 new pcvar_serverip;
 new pcvar_server_nick;
-new pcvar_discon_in_banlist;
 new pcvar_complainurl;
 new pcvar_debug;
 new pcvar_add_mapname;
@@ -89,9 +95,9 @@ new Float:kick_delay = 10.0; //motd_delay from DB
 
 // disconnected Player
 
-new g_disconPLname[32];
-new g_disconPLauthid[35];
-new g_disconPLip[22];
+new g_disconPLname[MAX_DISCONNECTED_PLAYERS][32];
+new g_disconPLauthid[MAX_DISCONNECTED_PLAYERS][35];
+new g_disconPLip[MAX_DISCONNECTED_PLAYERS][22];
 
 new g_highbantimesnum;
 new g_lowbantimesnum;
