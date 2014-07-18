@@ -304,6 +304,12 @@ public adminSql()
 	get_cvar_string("amx_mysql_pass", pass, 31);
 	get_cvar_string("amx_mysql_db", db, 127);
 	
+	if(g_SqlX)
+	{
+		mysql_close(g_SqlX);
+		g_SqlX = 0;
+	}
+		
 	new sql = mysql_connect(host, user, pass, db, error, charsmax(error))
 	
 	get_cvar_string("amx_sql_table", table, 31)	
