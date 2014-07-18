@@ -99,12 +99,12 @@ public actionHistoryMenu(id,key)
 {
 	if(key == 7)
 	{
-		cmdBanMenu2(id, --g_iPage[id]);
+		cmdBanhistoryMenu2(id, --g_iPage[id]);
 		return PLUGIN_HANDLED;
 	}
 	else if(key == 8)
 	{
-		cmdBanMenu2(id, ++g_iPage[id]);
+		cmdBanhistoryMenu2(id, ++g_iPage[id]);
 		return PLUGIN_HANDLED;
 	}
 	else if(key == 9)
