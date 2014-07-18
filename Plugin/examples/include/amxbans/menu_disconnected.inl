@@ -62,7 +62,7 @@ public DisplayMenu_Disconnected(id, page)
 		else
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n", b, g_disconPLname[i]);
 	}
-	if(is_lastpage(page, g_iAddedPlayers, 7))
+	if(is_lastpage(page, g_iAddedPlayers, 7) && !is_firstpage(page))
 	{
 		keys |= MENU_KEY_8;
 		
@@ -74,18 +74,26 @@ public DisplayMenu_Disconnected(id, page)
 	else if(!is_firstpage(page))
 	{
 		keys |= MENU_KEY_8|MENU_KEY_9;
+		
 		if(g_coloredMenus)
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r9.\w %s^n\r0.\w %s", _T("Back", id), _T("More", id), _T("Exit", id));
 		else
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n9. %s^n0. %s", _T("Back", id), _T("More", id), _T("Exit", id));
 	}
-	else
+	else if(is_firstpage(page) && left_entries(page, g_iAddedPlayers, 7))
 	{
 		keys |= MENU_KEY_9;
 		if(g_coloredMenus)
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r9.\w %s^n\r0.\w %s", _T("More", id), _T("Exit", id));
 		else
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n9. %s^n0. %s", _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && !left_entries(page, g_iAddedPlayers, 7))
+	{
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r0.\w %s", _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n0. %s", _T("Exit", id));
 	}
 	
 	show_menu(id, keys, menu, -1, "disconnected_players");

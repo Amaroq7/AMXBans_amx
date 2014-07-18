@@ -37,8 +37,15 @@ public cmdBanhistoryMenu2(id,page)
 	
 	get_players(g_iPlayers[id], g_iNum[id], "ch");
 	
+	if(g_coloredMenus)
+		iLen += formatex(menu, charsmax(menu), "\r%s\w^n^n", _T("Banhistory menu",id))
+	else
+		iLen += formatex(menu, charsmax(menu), "%s^n^n", _T("Banhistory menu",id))
+	
 	for(new i=page*7;i<next_page(page, g_iNum[id], 7)*7;i++)
 	{
+		if(!g_iPlayers[id][i])
+			continue;
 		get_user_name(g_iPlayers[id][i], szName,charsmax(szName));
 		
 		keys |= (1<<b)
@@ -50,6 +57,41 @@ public cmdBanhistoryMenu2(id,page)
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n", b, szName);
 				
 	}
+	
+	if(is_lastpage(page, g_iNum[id], 7) && !is_firstpage(page))
+	{
+		keys |= MENU_KEY_8;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r0.\w %s", _T("Back", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n0. %s", _T("Back", id), _T("Exit", id));
+	}
+	else if(!is_firstpage(page))
+	{
+		keys |= MENU_KEY_8|MENU_KEY_9;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r9.\w %s^n\r0.\w %s", _T("Back", id), _T("More", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n9. %s^n0. %s", _T("Back", id), _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && left_entries(page, g_iNum[id], 7))
+	{
+		keys |= MENU_KEY_9;
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r9.\w %s^n\r0.\w %s", _T("More", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n9. %s^n0. %s", _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && !left_entries(page, g_iNum[id], 7))
+	{
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r0.\w %s", _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n0. %s", _T("Exit", id));
+	}
+	
 	show_menu(id, keys, menu, -1, "menu_history");
 	return PLUGIN_HANDLED
 }
@@ -88,7 +130,9 @@ public select_motd_history(id, pid)
 	}
 	
 	mysql_nextrow(g_SqlX);
-	mysql_getfield(g_SqlX, 0, motd_url, 256)
+	mysql_getfield(g_SqlX, 1, motd_url, charsmax(motd_url))
+	
+	server_print(motd_url);
 	
 	//http://URL/motd.php?sid=%s&adm=%d&lang=%s
 	if(contain(motd_url,"?sid=%s&adm=%d&lang=%s") != -1)

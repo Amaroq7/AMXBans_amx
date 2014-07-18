@@ -22,17 +22,22 @@ stock get_pages(var, ratio)
 
 stock is_lastpage(page, var, ratio)
 {
-	return (page + 1 > get_pages(var, ratio)) ? 1 : 0;
+	return (page + 1 >= get_pages(var, ratio)) ? 1 : 0;
 }
 
 stock next_page(page, var, ratio)
 {
-	return (page + 1 > get_pages(var, ratio)) ? page+1 : get_pages(var, ratio);
+	return (page + 1 < get_pages(var, ratio)) ? page+1 : get_pages(var, ratio);
 }
 
 stock is_firstpage(page)
 {
 	return (!page) ? 1 : 0;
+}
+
+stock left_entries(page, var, ratio)
+{
+	return ((page+1)*ratio < var) ? 1 : 0;
 }
 
 move_array(array[][], array_size, size, &position)

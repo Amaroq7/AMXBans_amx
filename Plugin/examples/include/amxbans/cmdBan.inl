@@ -110,7 +110,7 @@ public cmdBan(id, level, cid)
 	// Check so the ban command has the right format
 	if( !is_str_num(ban_length) || read_argc() < 3 )
 	{
-		client_print(id,print_console,"[AMXBans] %s", _T("amx_ban <Time in Minutes> <SteamID | Nickname> <Reason>"))
+		client_print(id,print_console,"[AMXBans] %s", _T("amx_ban <Time in Minutes> <SteamID | Nickname | #userid> <Reason> <SteamID> <IP>"))
 		return PLUGIN_HANDLED
 	}
 	
@@ -220,101 +220,98 @@ public cmd_ban_(id, ban_disconnected)
 	if ( id == 0 )
 		serverCmd = true;
 	
-	else
+	if (!mysql_num_rows(g_SqlX))
 	{
-		if (!mysql_num_rows(g_SqlX))
+		if (g_choicePlayerId[id] && !ban_disconnected)
 		{
-			if (g_choicePlayerId[id])
-			{
-				get_user_name(g_choicePlayerId[id], g_choicePlayerName[id], charsmax(g_choicePlayerName[]))
-			}
-			else if(g_choicePlayerId[id] && !ban_disconnected) /* The player was not found in server */
-			{
-				// Must make that false to be able to ban another player not on the server
-				// Players that aren't in the server always get id = 0
-				g_being_banned[0] = false
+			get_user_name(g_choicePlayerId[id], g_choicePlayerName[id], charsmax(g_choicePlayerName[]))
+		}
+		else if(g_choicePlayerId[id] == -1 && !ban_disconnected) /* The player was not found in server */
+		{
+			// Must make that false to be able to ban another player not on the server
+			// Players that aren't in the server always get id = 0
+			g_being_banned[0] = false
 			
-				if (serverCmd)
-					server_print(_T("[AMXBans] Player %s could not be found"),g_ident)
-				else
-					console_print(id, _T("[AMXBans] Player %s could not be found"),g_ident)
-	
-				if ( get_cvarptr_num(pcvar_debug) >= 1 )
-					log_amx("[AMXBans] Player %s could not be found",g_ident)
-	
-				return PLUGIN_HANDLED
-			}
-			
-			new admin_nick[100], admin_steamid[50], admin_ip[20]
-			get_user_ip(id, admin_ip, 19, 1)
-			
-			if (!serverCmd)
-			{
-				get_user_authid(id, admin_steamid, 49)
-				mysql_get_username_safe(id, admin_nick, 99)
-	
-				if ( get_cvarptr_num(pcvar_debug) >= 1 )
-					log_amx("[AMXBans cmdBan] Adminsteamid: %s, Servercmd: %s", admin_steamid, (serverCmd)?"Yes":"No")
-			}
+			if (serverCmd)
+				server_print(_T("[AMXBans] Player %s could not be found"),g_ident)
 			else
-			{
-				/* If the server does the ban you cant get any steam_ID or team */
-				admin_steamid = ""
-		
-				/* This is so you can have a shorter name for the servers hostname.
-				Some servers hostname can be very long b/c of sponsors and that will make the ban list on the web bad */
-				new servernick[100]
-				get_cvarptr_string(pcvar_server_nick, servernick, 99)
-				if (strlen(servernick))
-					copy(admin_nick,charsmax(admin_nick),servernick)
-			}
-		
-			/* If HLGUARD ban, the admin nick will be set to [HLGUARD] */
-			if ( contain(g_choiceReason[id], "[HLGUARD]") != -1 )
-				copy(admin_nick,charsmax(admin_nick),"[HLGUARD]")
-		
-			/* If ATAC ban, the admin nick will be set to [ATAC] */
-			if ( contain(g_choiceReason[id], "Max Team Kill Violation") != -1 )
-				copy(admin_nick,charsmax(admin_nick),"[ATAC]")
-				
+				console_print(id, _T("[AMXBans] Player %s could not be found"),g_ident)
+	
 			if ( get_cvarptr_num(pcvar_debug) >= 1 )
-				log_amx("[AMXBans cmdBan] Admin nick: %s, Admin userid: %d", admin_nick, get_user_userid(id))
+				log_amx("[AMXBans] Player %s could not be found",g_ident)
+	
+			return PLUGIN_HANDLED
+		}
 			
-			new server_name[200]
-			mysql_get_servername_safe(server_name, charsmax(server_name))
-
-			if ( get_cvarptr_num(pcvar_add_mapname) ) {
-				new mapname[32]//, pre[4],post[4]
-				get_mapname(mapname,31)
-				format(server_name,charsmax(server_name),"%s (%s)",server_name,mapname)
-			}
-
-			new player_nick[64]
-			mysql_escape_string(g_choicePlayerName[id],player_nick,charsmax(player_nick))
-			new admin_nick_safe[200]
-			mysql_escape_string(admin_nick,admin_nick_safe,charsmax(admin_nick_safe))
-		
-			mysql_query(g_SqlX, "INSERT INTO `%s%s` \
-				(player_id,player_ip,player_nick,admin_ip,admin_id,admin_nick,ban_type,ban_reason,ban_created,ban_length,server_name,server_ip,expired) \
-				VALUES('%s','%s','%s','%s','%s','%s','%s','%s',UNIX_TIMESTAMP(NOW()),%d,'%s','%s:%s',0)", \
-				g_dbPrefix, tbl_bans, g_choicePlayerAuthid[id], g_choicePlayerIp[id], player_nick, admin_ip, admin_steamid, admin_nick, g_ban_type[id], \
-				g_choiceReason[id], g_choiceTime[id], server_name, g_ip, g_port);
-		
-			if(!ban_disconnected)
-				insert_bandetails(id, g_choicePlayerId[id]);
+		new admin_nick[100], admin_steamid[50], admin_ip[20]
+		get_user_ip(id, admin_ip, 19, 1)
 			
+		if (!serverCmd)
+		{
+			get_user_authid(id, admin_steamid, 49)
+			mysql_get_username_safe(id, admin_nick, 99)
+	
+			if ( get_cvarptr_num(pcvar_debug) >= 1 )
+				log_amx("[AMXBans cmdBan] Adminsteamid: %s, Servercmd: %s", admin_steamid, (serverCmd)?"Yes":"No")
 		}
 		else
 		{
-			if ( serverCmd )
-				log_message("[AMXBans] %s",_T("Player is already banned."))
-			else
-				client_print(id,print_console,"[AMXBans] %s",_T("Player is already banned."))
+			/* If the server does the ban you cant get any steam_ID or team */
+			admin_steamid = ""
+		
+			/* This is so you can have a shorter name for the servers hostname.
+			Some servers hostname can be very long b/c of sponsors and that will make the ban list on the web bad */
+			new servernick[100]
+			get_cvarptr_string(pcvar_server_nick, servernick, 99)
+			if (strlen(servernick))
+				copy(admin_nick,charsmax(admin_nick),servernick)
+		}
+		
+		/* If HLGUARD ban, the admin nick will be set to [HLGUARD] */
+		if ( contain(g_choiceReason[id], "[HLGUARD]") != -1 )
+			copy(admin_nick,charsmax(admin_nick),"[HLGUARD]")
+		
+		/* If ATAC ban, the admin nick will be set to [ATAC] */
+		if ( contain(g_choiceReason[id], "Max Team Kill Violation") != -1 )
+			copy(admin_nick,charsmax(admin_nick),"[ATAC]")
+				
+		if ( get_cvarptr_num(pcvar_debug) >= 1 )
+			log_amx("[AMXBans cmdBan] Admin nick: %s, Admin userid: %d", admin_nick, get_user_userid(id))
+			
+		new server_name[200]
+		mysql_get_servername_safe(server_name, charsmax(server_name))
+
+		if ( get_cvarptr_num(pcvar_add_mapname) ) {
+			new mapname[32]//, pre[4],post[4]
+			get_mapname(mapname,31)
+			format(server_name,charsmax(server_name),"%s (%s)",server_name,mapname)
+		}
+
+		new player_nick[64]
+		mysql_escape_string(g_choicePlayerName[id],player_nick,charsmax(player_nick))
+		new admin_nick_safe[200]
+		mysql_escape_string(admin_nick,admin_nick_safe,charsmax(admin_nick_safe))
+		
+		mysql_query(g_SqlX, "INSERT INTO `%s%s` \
+			(player_id,player_ip,player_nick,admin_ip,admin_id,admin_nick,ban_type,ban_reason,ban_created,ban_length,server_name,server_ip,expired) \
+			VALUES('%s','%s','%s','%s','%s','%s','%s','%s',UNIX_TIMESTAMP(NOW()),%d,'%s','%s:%s',0)", \
+			g_dbPrefix, tbl_bans, g_choicePlayerAuthid[id], g_choicePlayerIp[id], player_nick, admin_ip, admin_steamid, admin_nick, g_ban_type[id], \
+			g_choiceReason[id], g_choiceTime[id], server_name, g_ip, g_port);
+		
+		if(!ban_disconnected)
+			insert_bandetails(id, g_choicePlayerId[id]);
+			
+	}
+	else
+	{
+		if ( serverCmd )
+			log_message("[AMXBans] %s",_T("Player is already banned."))
+		else
+			client_print(id,print_console,"[AMXBans] %s",_T("Player is already banned."))
 			// Must make that false to be able to ban another player not on the server
 			// Players that aren't in the server always get id = 0
-			g_being_banned[g_choicePlayerId[id]] = false
+		g_being_banned[g_choicePlayerId[id]] = false
 
-		}
 	}
 	
 	return PLUGIN_HANDLED

@@ -52,6 +52,8 @@ public cmdFlaggingMenu2(id, page)
 	
 	for(new i=page*7;i<next_page(page, g_iNum[id], 7)*7;i++)
 	{
+		if(!g_iPlayers[id][i])
+			continue;
 		get_user_name(g_iPlayers[id][i], g_PlayerName[i],charsmax(g_PlayerName[]));
 		
 		iFlags = get_user_flags(g_iPlayers[id][i]);
@@ -97,7 +99,7 @@ public cmdFlaggingMenu2(id, page)
 		}
 	}
 	
-	if(is_lastpage(page, g_iNum[id], 7))
+	if(is_lastpage(page, g_iNum[id], 7) && !is_firstpage(page))
 	{
 		keys |= MENU_KEY_8;
 		
@@ -109,18 +111,26 @@ public cmdFlaggingMenu2(id, page)
 	else if(!is_firstpage(page))
 	{
 		keys |= MENU_KEY_8|MENU_KEY_9;
+		
 		if(g_coloredMenus)
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r9.\w %s^n\r0.\w %s", _T("Back", id), _T("More", id), _T("Exit", id));
 		else
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n9. %s^n0. %s", _T("Back", id), _T("More", id), _T("Exit", id));
 	}
-	else
+	else if(is_firstpage(page) && left_entries(page, g_iNum[id], 7))
 	{
 		keys |= MENU_KEY_9;
 		if(g_coloredMenus)
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r9.\w %s^n\r0.\w %s", _T("More", id), _T("Exit", id));
 		else
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n9. %s^n0. %s", _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && !left_entries(page, g_iNum[id], 7))
+	{
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r0.\w %s", _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n0. %s", _T("Exit", id));
 	}
 	
 	show_menu(id, keys, menu, -1, "menu_flagplayer");
@@ -143,7 +153,7 @@ public actionFlaggingMenu(id,key)
 	
 	new pid=g_iPlayers[id][g_iPage[id]*7+key];
 	
-	copy(g_choicePlayerName[id],charsmax(g_choicePlayerName[]),g_PlayerName[pid])
+	copy(g_choicePlayerName[id],charsmax(g_choicePlayerName[]),g_PlayerName[pid-1])
 	get_user_authid(pid,g_choicePlayerAuthid[id],charsmax(g_choicePlayerAuthid[]))
 	get_user_ip(pid,g_choicePlayerIp[id],charsmax(g_choicePlayerIp[]),1)
 	g_choicePlayerId[id]=pid
@@ -228,6 +238,7 @@ public cmdFlagtimeMenu(id, page)
 	new szDisplay[128];
 	for(new i=page*7;i < next_page(page, g_flagtimesnum, 7)*7;i++)
 	{
+		
 		get_flagtime_string(id,g_FlagMenuValues[i],szDisplay,charsmax(szDisplay))
 		
 		keys |= (1<<b)
@@ -239,7 +250,7 @@ public cmdFlagtimeMenu(id, page)
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n", b, szDisplay);
 	}
 	
-	if(is_lastpage(page, g_flagtimesnum, 7))
+	if(is_lastpage(page, g_flagtimesnum, 7) && !is_firstpage(page))
 	{
 		keys |= MENU_KEY_8;
 		
@@ -251,18 +262,26 @@ public cmdFlagtimeMenu(id, page)
 	else if(!is_firstpage(page))
 	{
 		keys |= MENU_KEY_8|MENU_KEY_9;
+		
 		if(g_coloredMenus)
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r9.\w %s^n\r0.\w %s", _T("Back", id), _T("More", id), _T("Exit", id));
 		else
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n9. %s^n0. %s", _T("Back", id), _T("More", id), _T("Exit", id));
 	}
-	else
+	else if(is_firstpage(page) && left_entries(page, g_flagtimesnum, 7))
 	{
 		keys |= MENU_KEY_9;
 		if(g_coloredMenus)
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r9.\w %s^n\r0.\w %s", _T("More", id), _T("Exit", id));
 		else
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n9. %s^n0. %s", _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && !left_entries(page, g_flagtimesnum, 7))
+	{
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r0.\w %s", _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n0. %s", _T("Exit", id));
 	}
 	show_menu(id, keys, menu, -1, "menu_flagtime");
 	return PLUGIN_HANDLED
@@ -305,7 +324,7 @@ public cmdFlagReasonMenu(id, page)
 	
 	for(new i=page*7;i < next_page(page, g_iLoadedReasons, 7)*7;i++)
 	{
-		if(is_firstpage(page))
+		if(!i)
 		{
 			if(custom_static_time >= 0)
 			{
@@ -322,6 +341,7 @@ public cmdFlagReasonMenu(id, page)
 					get_bantime_string(id,custom_static_time,szTime,charsmax(szTime))
 					format(szDisplay,charsmax(szDisplay),"%s (%s)",szDisplay,szTime)
 				}
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, szDisplay);
 			}
 		}
 		else
@@ -330,18 +350,19 @@ public cmdFlagReasonMenu(id, page)
 			b++;
 			
 			if(g_coloredMenus)
-				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d.\w %s^n^n", b, g_banReasons[i]);
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d.\w %s^n", b, g_banReasons[i]);
 			else
-				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n^n", b, g_banReasons[i]);
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n", b, g_banReasons[i]);
 				
 			if(g_iAdminUseStaticBantime[id])
 			{
 				get_bantime_string(id,g_banReasons_Bantime[i],szTime,charsmax(szTime))
 				format(szDisplay,charsmax(szDisplay),"%s (%s)",szDisplay,szTime)
-			} 
+			}
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, szDisplay);
 		}
 	}
-	if(is_lastpage(page, g_iLoadedReasons, 7))
+	if(is_lastpage(page, g_iLoadedReasons, 7) && !is_firstpage(page))
 	{
 		keys |= MENU_KEY_8;
 		
@@ -353,18 +374,26 @@ public cmdFlagReasonMenu(id, page)
 	else if(!is_firstpage(page))
 	{
 		keys |= MENU_KEY_8|MENU_KEY_9;
+		
 		if(g_coloredMenus)
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r9.\w %s^n\r0.\w %s", _T("Back", id), _T("More", id), _T("Exit", id));
 		else
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n9. %s^n0. %s", _T("Back", id), _T("More", id), _T("Exit", id));
 	}
-	else
+	else if(is_firstpage(page) && left_entries(page, g_iLoadedReasons, 7))
 	{
 		keys |= MENU_KEY_9;
 		if(g_coloredMenus)
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r9.\w %s^n\r0.\w %s", _T("More", id), _T("Exit", id));
 		else
 			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n9. %s^n0. %s", _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && !left_entries(page, g_iLoadedReasons, 7))
+	{
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r0.\w %s", _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n0. %s", _T("Exit", id));
 	}
 	show_menu(id, keys, menu, -1, "menu_flagreason");
 	return PLUGIN_HANDLED
