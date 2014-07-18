@@ -35,7 +35,7 @@ public cmdBanMenu(id,level,cid)
 		return PLUGIN_HANDLED
 	
 	g_iPage[id] = 0;
-	cmdBanMenu2(id, 0)
+	cmdBanMenu_menu(id, 0)
 	return PLUGIN_HANDLED
 }
 
@@ -50,19 +50,24 @@ stock admin_high_bantime_values(const id)
 	return 0;
 }
 	
-public cmdBanMenu2(id, page)
+public cmdBanMenu_menu(id, page)
 {
-	new iLen, b = 1, keys = MENU_KEY_0|MENU_KEY_1;
+	new iLen, b = 1, keys = MENU_KEY_0|MENU_KEY_1, szTrans[32];
 	
 	if(g_coloredMenus)
 		iLen += formatex(menu, charsmax(menu), "\r%s\w^n^n", _T("Ban menu", id))
 	else
 		iLen += formatex(menu, charsmax(menu), "%s^n^n", _T("Ban menu", id))
 	
-	if(g_coloredMenus)
-		iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d.\y %s\w^n^n", b, (!g_menuban_type[id]) ? _T("Ban instantly", id) : (g_menuban_type[id] == 1) ? _T("Ban after this round", id) : _T("Ban after this map", id))
+	if(!g_menuban_type[id])
+		formatex(szTrans, charsmax(szTrans),  _T("Ban instantly", id));
 	else
-		iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n^n", b, (!g_menuban_type[id]) ? _T("Ban instantly", id) : (g_menuban_type[id] == 1) ? _T("Ban after this round", id) : _T("Ban after this map", id))
+		formatex(szTrans, charsmax(szTrans),  (g_menuban_type[id] == 1) ? _T("Ban after this round", id) : _T("Ban after this map", id));
+	
+	if(g_coloredMenus)
+		iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d.\y %s\w^n^n", b, szTrans)
+	else
+		iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n^n", b, szTrans)
 	
 	new iFlags, iFlags_admin = get_user_flags(id);
 	get_players(g_iPlayers[id], g_iNum[id], "ch");
@@ -166,22 +171,24 @@ public actionBanMenu(id,key)
 		}
 		else
 		{
-			if(++g_menuban_type[id] > 1)
+			if(++g_menuban_type[id] == 1)
+				g_menuban_type[id] = 2;
+			else
 				g_menuban_type[id] = 0;
 		}
 			
-		cmdBanMenu2(id, g_iPage[id]);
+		cmdBanMenu_menu(id, g_iPage[id]);
 		
 		return PLUGIN_HANDLED;
 	}
 	else if(key == 7)
 	{
-		cmdBanMenu2(id, --g_iPage[id]);
+		cmdBanMenu_menu(id, --g_iPage[id]);
 		return PLUGIN_HANDLED;
 	}
 	else if(key == 8)
 	{
-		cmdBanMenu2(id, ++g_iPage[id]);
+		cmdBanMenu_menu(id, ++g_iPage[id]);
 		return PLUGIN_HANDLED;
 	}
 	else if(key == 9)
@@ -195,12 +202,12 @@ public actionBanMenu(id,key)
 		return PLUGIN_HANDLED
 	}
 	
-	copy(g_choicePlayerName[id],charsmax(g_choicePlayerName[]),g_PlayerName[g_choicePlayerId[id]])
+	copy(g_choicePlayerName[id],charsmax(g_choicePlayerName[]),g_PlayerName[g_choicePlayerId[id]-1])
 	get_user_authid(g_choicePlayerId[id],g_choicePlayerAuthid[id],charsmax(g_choicePlayerAuthid[]))
 	get_user_ip(g_choicePlayerId[id],g_choicePlayerIp[id],charsmax(g_choicePlayerIp[]),1)
 	
 	if(get_cvarptr_num(pcvar_debug) >= 2)
-		log_amx("[AMXBans PlayerMenu %d] %d choice: %d | %s | %s | %d",menu,id,g_choicePlayerName[id],g_choicePlayerAuthid[id],g_choicePlayerIp[id],g_choicePlayerId[id])
+		log_amx("[AMXBans PlayerMenu %d] %d choice: %d | %s | %s | %d",g_hMenuBan,id,g_choicePlayerName[id],g_choicePlayerAuthid[id],g_choicePlayerIp[id],g_choicePlayerId[id])
 	
 	//see if the admin can choose the bantime
 	g_iPage[id] = 0;
@@ -216,7 +223,7 @@ public actionBanMenu(id,key)
 }
 public cmdBantimeMenu(id, page)
 {
-	new iLen, b, keys = MENU_KEY_0, szDisplay[128];
+	new iLen, b, keys = MENU_KEY_0, szDisplay[128], iPerm;
 	
 	if(g_coloredMenus)
 		iLen += formatex(menu, charsmax(menu), "\r%s\w^n^n", _T("Bantime Menu", id))
@@ -233,6 +240,11 @@ public cmdBantimeMenu(id, page)
 	{
 		for(new i=page*7;i < next_page(page, g_highbantimesnum, 7)*7;i++)
 		{
+			if(iPerm && !g_HighBanMenuValues[i])
+				continue;
+			else if(!iPerm && !g_HighBanMenuValues[i])
+				iPerm = 1;
+				
 			get_bantime_string(id,g_HighBanMenuValues[i],szDisplay,charsmax(szDisplay))
 			
 			keys |= (1<<b);
@@ -248,6 +260,11 @@ public cmdBantimeMenu(id, page)
 	{
 		for(new i=page*7;i < next_page(page, g_lowbantimesnum, 7)*7;i++)
 		{
+			if(iPerm && !g_LowBanMenuValues[i])
+				continue;
+			else if(!iPerm && !g_LowBanMenuValues[i])
+				iPerm = 1;
+				
 			get_bantime_string(id,g_LowBanMenuValues[i],szDisplay,charsmax(szDisplay))
 			
 			keys |= (1<<b);
@@ -335,7 +352,7 @@ public cmdReasonMenu(id, page)
 	
 	for(new i=page*7;i < next_page(page, g_iLoadedReasons, 7)*7;i++)
 	{
-		if(is_firstpage(page))
+		if(!i)
 		{
 			if(custom_static_time >= 0)
 			{
@@ -352,6 +369,7 @@ public cmdReasonMenu(id, page)
 					get_bantime_string(id,custom_static_time,szTime,charsmax(szTime))
 					format(szDisplay,charsmax(szDisplay),"%s (%s)",szDisplay,szTime)
 				}
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, szDisplay);
 			}
 		}
 		else
@@ -360,15 +378,16 @@ public cmdReasonMenu(id, page)
 			b++;
 			
 			if(g_coloredMenus)
-				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d.\w %s^n^n", b, g_banReasons[i]);
+				formatex(szDisplay, charsmax(szDisplay), "\r%d.\w %s^n", b, g_banReasons[i]);
 			else
-				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n^n", b, g_banReasons[i]);
+				formatex(szDisplay, charsmax(szDisplay), "%d. %s^n", b, g_banReasons[i]);
 				
 			if(g_iAdminUseStaticBantime[id])
 			{
 				get_bantime_string(id,g_banReasons_Bantime[i],szTime,charsmax(szTime))
 				format(szDisplay,charsmax(szDisplay),"%s (%s)",szDisplay,szTime)
-			} 
+			}
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, szDisplay);
 		}
 	}
 	if(is_lastpage(page, g_iLoadedReasons, 7) && !is_firstpage(page))
