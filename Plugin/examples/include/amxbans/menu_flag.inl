@@ -223,6 +223,7 @@ public actionUnflagMenu(id,key)
 public cmdFlagtimeMenu(id, page)
 {
 	new iLen, b, keys = MENU_KEY_0;
+	new iPerm;
 	
 	if(g_coloredMenus)
 		iLen += formatex(menu, charsmax(menu), "\r%s\w^n^n", _T("Flagtime menu",id));
@@ -238,7 +239,12 @@ public cmdFlagtimeMenu(id, page)
 	new szDisplay[128];
 	for(new i=page*7;i < next_page(page, g_flagtimesnum, 7)*7;i++)
 	{
+		if(!g_FlagMenuValues[i] && !iPerm)
+			iPerm = 1;
 		
+		else if(!g_FlagMenuValues[i] && iPerm)
+			continue;
+			
 		get_flagtime_string(id,g_FlagMenuValues[i],szDisplay,charsmax(szDisplay))
 		
 		keys |= (1<<b)
@@ -350,9 +356,9 @@ public cmdFlagReasonMenu(id, page)
 			b++;
 			
 			if(g_coloredMenus)
-				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d.\w %s^n", b, g_banReasons[i]);
+				formatex(szDisplay, charsmax(szDisplay), "\r%d.\w %s^n", b, g_banReasons[i]);
 			else
-				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n", b, g_banReasons[i]);
+				formatex(szDisplay, charsmax(szDisplay), "%d. %s^n", b, g_banReasons[i]);
 				
 			if(g_iAdminUseStaticBantime[id])
 			{
