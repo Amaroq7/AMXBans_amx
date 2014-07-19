@@ -139,7 +139,7 @@ public amxbans_sql_initialized(sqlTuple,dbPrefix[])
 		get_cvar_string("amx_mysql_pass", pass, 63)
 		get_cvar_string("amx_mysql_db", db, 63)
 		
-		g_SqlX = mysql_connect(host, user, pass, db, error, charsmax(error))
+		g_SqlX = mysql_connect(host, user, pass, db, error, charsmax(error), 1)
 		
 		get_cvar_string("amx_sql_prefix",g_dbPrefix,charsmax(g_dbPrefix))
 	}

@@ -80,10 +80,10 @@ public check_player_(id)
 		return PLUGIN_HANDLED
 	}
 	
-	mysql_nextrow(g_SqlX);
-	
 	new ban_reason[128], admin_nick[100],admin_steamid[50],admin_ip[30],ban_type[4]
 	new player_nick[50],player_steamid[50],player_ip[30],server_name[100],server_ip[30]
+	
+	mysql_nextrow(g_SqlX);
 	
 	new bid = mysql_getfield(g_SqlX, 1)
 	new ban_created = mysql_getfield(g_SqlX, 2)

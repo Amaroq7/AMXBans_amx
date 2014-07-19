@@ -22,9 +22,9 @@ check_flagged(id)
 	get_user_ip(id, ip, charsmax(ip), 1);
 	
 	if(get_cvarptr_num(pcvar_flagged_all))
-		formatex(pquery, charsmax(pquery), "SELECT `fid`,`reason`,`created`,`length` FROM `%s%s` WHERE player_id='%s' OR player_ip='%s' ORDER BY `length` ASC", g_dbPrefix, tbl_flagged, authid, ip);
+		formatex(pquery, charsmax(pquery), "SELECT fid,reason,created,length FROM `%s%s` WHERE player_id='%s' OR player_ip='%s' ORDER BY `length` ASC", g_dbPrefix, tbl_flagged, authid, ip);
 	else
-		formatex(pquery, charsmax(pquery), "SELECT `fid`,`reason`,`created`,`length` FROM `%s%s` WHERE (player_id='%s' OR player_ip='%s') AND `server_ip`='%s:%s' ORDER BY `length` ASC", g_dbPrefix, tbl_flagged, authid,ip, g_ip, g_port);
+		formatex(pquery, charsmax(pquery), "SELECT fid,reason,created,length FROM `%s%s` WHERE (player_id='%s' OR player_ip='%s') AND `server_ip`='%s:%s' ORDER BY `length` ASC", g_dbPrefix, tbl_flagged, authid,ip, g_ip, g_port);
 	
 	mysql_query(g_SqlX, pquery);
 	

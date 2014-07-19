@@ -310,7 +310,7 @@ public adminSql()
 		g_SqlX = 0;
 	}
 		
-	new sql = mysql_connect(host, user, pass, db, error, charsmax(error))
+	new sql = mysql_connect(host, user, pass, db, error, charsmax(error), 1)
 	
 	get_cvar_string("amx_sql_table", table, 31)	
 	
