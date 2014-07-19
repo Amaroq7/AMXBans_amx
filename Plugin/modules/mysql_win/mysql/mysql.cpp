@@ -209,7 +209,7 @@ sql_list* create_sql(sql_list** head, const char* host, const char* user, const 
 }
 
 // connection
-int sqlconnect(MYSQL *mysql, const char* sql_host, const char* sql_user, const char* sql_pass, const char* sql_db, char** sqlerror, int reconnect) {
+int sqlconnect(MYSQL *mysql, const char* sql_host, const char* sql_user, const char* sql_pass, const char* sql_db, char** sqlerror, bool reconnect) {
 	// DEC
 	char *pos;
 	unsigned int sql_port = 0;
@@ -314,7 +314,7 @@ NATIVE(sql_connect) {
 
 	char *sqlerror = NULL;
 
-	if (!sqlconnect(&(mysql->mysql), host, user, pass, dbname, &sqlerror, params[7])) {
+	if (!sqlconnect(&(mysql->mysql), host, user, pass, dbname, &sqlerror, ((*params / sizeof(cell)) >= 7) ? ((params[7] > 0) ? true : false) : true)) {
 		MF_SetAmxString(amx, params[5], sqlerror ? sqlerror : "unknown error", params[6]);
 		return CONNECT_FAILED;
 	}
