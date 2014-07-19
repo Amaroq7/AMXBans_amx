@@ -11,9 +11,9 @@
 
 new const AUTHOR[] = "HLXBans Dev Team"
 new const PLUGIN_NAME[] = "AMXBans"
-new const VERSION[] = "0.0.3-alpha" // This is used in the plugins name
+new const VERSION[] = "0.0.4-alpha" // This is used in the plugins name
 
-new const amxbans_version[] = "0.0.3-alpha" // This is for the DB
+new const amxbans_version[] = "0.0.4-alpha" // This is for the DB
 
 #include <translator>
 #include <amxmod>
