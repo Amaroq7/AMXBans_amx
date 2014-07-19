@@ -48,8 +48,8 @@ move_array(array[][], array_size, size, &position)
 		if(empty && strlen(array[i]))
 		{
 			pos = i;
-			formatex(array[--pos], array_size-1, array[i]);
-			formatex(array[i], array_size-1, "");
+			copy(array[--pos], array_size-1, array[i]);
+			copy(array[i], array_size-1, "");
 			empty = true;
 		}
 		else if(!strlen(array[i]))

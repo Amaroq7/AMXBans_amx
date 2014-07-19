@@ -453,7 +453,7 @@ public actionReasonMenu(id,key)
 	else
 	{
 		new aid = g_iPage[id]*7+key;
-		formatex(g_choiceReason[id],charsmax(g_choiceReason[]),g_banReasons[aid])
+		copy(g_choiceReason[id],charsmax(g_choiceReason[]),g_banReasons[aid])
 		if(g_iAdminUseStaticBantime[id]) g_choiceTime[id]=g_banReasons_Bantime[aid]
 	}
 	

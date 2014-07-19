@@ -158,9 +158,9 @@ public cmdBan(id, level, cid)
 			return PLUGIN_HANDLED;
 		}
 		
-		formatex(g_choicePlayerName[id], charsmax(g_choicePlayerName[]), g_ident);
-		formatex(g_choicePlayerIp[id], charsmax(g_choicePlayerIp[]), szIP);
-		formatex(g_choicePlayerAuthid[id], charsmax(g_choicePlayerAuthid[]), szAuthid);
+		copy(g_choicePlayerName[id], charsmax(g_choicePlayerName[]), g_ident);
+		copy(g_choicePlayerIp[id], charsmax(g_choicePlayerIp[]), szIP);
+		copy(g_choicePlayerAuthid[id], charsmax(g_choicePlayerAuthid[]), szAuthid);
 	}
 	else
 	{
@@ -487,7 +487,7 @@ public _select_amxbans_motd(id, player, bid) {
 			if ( get_cvarptr_num(pcvar_debug) >= 1 )
 				log_amx("[AMXBans cmdBan function 6.3]Motd: %s",msg)
 		} else {
-			formatex(msg, charsmax(msg), ban_motd)
+			copy(msg, charsmax(msg), ban_motd)
 		}
 		
 		if(is_user_connected(player)) {

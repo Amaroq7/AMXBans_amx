@@ -135,11 +135,11 @@ public plugin_init_core()
 
 get_ban_type(type[],len,steamid[],ip[])
 {
-	if(contain(steamid,"STEAM_0:") == 0 && contain(steamid,"STEAM_0:2") == -1) {
-		formatex(type,len,"S")
-	} else {
-		formatex(type,len,"SI")
-	}
+	if(contain(steamid,"STEAM_0:") == 0 && contain(steamid,"STEAM_0:2") == -1)
+		copy(type,len,"S")
+	else
+		copy(type,len,"SI")
+		
 	if(equal(ip,"127.0.0.1") && equal(type,"SI")) return 0
 	return 1
 }
@@ -158,7 +158,7 @@ public delayed_plugin_cfg()
 	if(strlen(g_ServerAddr) < 9) {
 		new ip[32]
 		get_user_ip(0,ip,31)
-		formatex(g_ServerAddr,charsmax(g_ServerAddr),ip)
+		copy(g_ServerAddr,charsmax(g_ServerAddr),ip)
 	}
 	if(get_cvar_num("amxbans_debug") >= 1) server_print("[AMXBans] plugin_cfg: ip %s / prefix %s",g_ServerAddr,g_dbPrefix)
 	
@@ -232,7 +232,7 @@ loadSettings(szFilename[])
 		}
 			
 		admins_push(AdminCount,AuthData,Password,read_flags(Access),read_flags(Flags));
-		formatex(g_AdminNick[AdminCount], 31, Name);
+		copy(g_AdminNick[AdminCount], 31, Name);
 		g_AdminUseStaticBantime[AdminCount] = str_to_num(Static);
 			
 		AdminCount++;
@@ -254,8 +254,8 @@ admins_push(pos, authdata[], password[], access, flags)
 {
 	if(pos >= MAX_ADMINS)
 		return;  //Later it'll be information about increasing MAX_ADMINS define
-	formatex(g_szAdmin[pos][Field_Name], 63, authdata);
-	formatex(g_szAdmin[pos][Field_Password], 63, password);
+	copy(g_szAdmin[pos][Field_Name], 63, authdata);
+	copy(g_szAdmin[pos][Field_Password], 63, password);
 	g_szAdmin[pos][Field_Access] = access;
 	g_szAdmin[pos][Field_Flags] = flags;
 }
@@ -264,8 +264,8 @@ admins_flush()
 {
 	for(new i=0;i<MAX_ADMINS;i++)
 	{
-		formatex(g_szAdmin[i][Field_Name], 63, "0");
-		formatex(g_szAdmin[i][Field_Password], 63, "0");
+		copy(g_szAdmin[i][Field_Name], 63, "0");
+		copy(g_szAdmin[i][Field_Password], 63, "0");
 		g_szAdmin[i][Field_Access] = 0;
 		g_szAdmin[i][Field_Flags] = 0;
 	}
@@ -280,10 +280,10 @@ stock admins_lookup(pos, AdminProp:prop, auth[]="", len=0)
 		return g_szAdmin[pos][Field_Access];
 		
 	else if(prop == AdminProp_Auth)
-		formatex(auth, len, g_szAdmin[pos][Field_Name]);
+		copy(auth, len, g_szAdmin[pos][Field_Name]);
 		
 	else if(prop == AdminProp_Password)
-		formatex(auth, len, g_szAdmin[pos][Field_Password]);
+		copy(auth, len, g_szAdmin[pos][Field_Password]);
 		
 	else if(prop == AdminProp_Flags)
 		return g_szAdmin[pos][Field_Flags];
@@ -346,7 +346,7 @@ public adminSql()
 	
 	for(new i=0;i<MAX_ADMINS;i++)
 	{
-		formatex(g_AdminNick[i], charsmax(g_AdminNick[]), "0");
+		copy(g_AdminNick[i], charsmax(g_AdminNick[]), "0");
 		g_AdminUseStaticBantime[i] = 0;
 	}
 	
@@ -383,7 +383,7 @@ public adminSql()
 		admins_push(AdminCount,AuthData,Password,read_flags(Access),read_flags(Flags));
 			
 		//save nick
-		formatex(g_AdminNick[AdminCount], 31, Nick)
+		copy(g_AdminNick[AdminCount], 31, Nick)
 			
 		//save static bantime
 		iStatic=1
@@ -504,7 +504,7 @@ getAccess(id, name[], authid[], ip[], password[])
 	{
 		Access=admins_lookup(index,AdminProp_Access);
 //amxbans
-		formatex(g_szAdminNick[id],31,g_AdminNick[index])
+		copy(g_szAdminNick[id],31,g_AdminNick[index])
 		g_iAdminUseStaticBantime[id]=g_AdminUseStaticBantime[index]
 //
 

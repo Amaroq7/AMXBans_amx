@@ -117,9 +117,9 @@ public disconnected_players_handler(id,key)
 	
 	g_iChoosedPlayer[id]=g_iPage[id]*7+key;
 	
-	formatex(g_choicePlayerName[id], charsmax(g_choicePlayerName[]), g_disconPLname[g_iChoosedPlayer[id]])
-	formatex(g_choicePlayerAuthid[id], charsmax(g_choicePlayerAuthid[]), g_disconPLauthid[g_iChoosedPlayer[id]])
-	formatex(g_choicePlayerIp[id], charsmax(g_choicePlayerIp[]), g_disconPLip[g_iChoosedPlayer[id]]);
+	copy(g_choicePlayerName[id], charsmax(g_choicePlayerName[]), g_disconPLname[g_iChoosedPlayer[id]])
+	copy(g_choicePlayerAuthid[id], charsmax(g_choicePlayerAuthid[]), g_disconPLauthid[g_iChoosedPlayer[id]])
+	copy(g_choicePlayerIp[id], charsmax(g_choicePlayerIp[]), g_disconPLip[g_iChoosedPlayer[id]]);
 	
 	g_choicePlayerId[id]=-1
 	
@@ -201,9 +201,9 @@ public _cmdMenuBanDisc(id)
 	new player_name[64]
 	mysql_escape_string(g_choicePlayerName[id],player_name,charsmax(player_name))
 	
-	formatex(g_disconPLauthid[g_iChoosedPlayer[id]], charsmax(g_disconPLauthid[]), "");
-	formatex(g_disconPLip[g_iChoosedPlayer[id]], charsmax(g_disconPLip[]), "");
-	formatex(g_disconPLname[g_iChoosedPlayer[id]], charsmax(g_disconPLname[]), "");
+	copy(g_disconPLauthid[g_iChoosedPlayer[id]], charsmax(g_disconPLauthid[]), "");
+	copy(g_disconPLip[g_iChoosedPlayer[id]], charsmax(g_disconPLip[]), "");
+	copy(g_disconPLname[g_iChoosedPlayer[id]], charsmax(g_disconPLname[]), "");
 	
 	if(--g_iAddedPlayers != 0) //Move entries if array is not clear
 	{
@@ -249,9 +249,9 @@ disconnect_remove_player(id)
 		if(!equal(name,g_disconPLname[i]))
 			continue;
 		
-		formatex(g_disconPLname[i], charsmax(g_disconPLname[]), "");
-		formatex(g_disconPLip[i], charsmax(g_disconPLip[]), "");
-		formatex(g_disconPLauthid[i], charsmax(g_disconPLauthid[]), "");
+		copy(g_disconPLname[i], charsmax(g_disconPLname[]), "");
+		copy(g_disconPLip[i], charsmax(g_disconPLip[]), "");
+		copy(g_disconPLauthid[i], charsmax(g_disconPLauthid[]), "");
 		
 		if(--g_iAddedPlayers != 0)
 		{
@@ -294,7 +294,7 @@ ArrayPushString(array[][], array_size, string[], inc)
 	{
 		g_iPos = 0;
 	}
-	formatex(array[g_iPos], array_size-1, string);
+	copy(array[g_iPos], array_size-1, string);
 	
 	if(inc)
 		g_iPos++;

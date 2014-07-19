@@ -153,6 +153,6 @@ ArrayPushReasons(pos,reason[],bantime)
 	if(pos >= MAX_REASONS)
 		return;
 		
-	formatex(g_banReasons[pos], 127, reason)
+	copy(g_banReasons[pos], 127, reason)
 	g_banReasons_Bantime[pos] = bantime;
 }
