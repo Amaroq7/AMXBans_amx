@@ -9,7 +9,7 @@
 #define moduleconfig_h
 
 // Module Info
-#define MODULE_NAME     "MySQL Access AMXBans"
+#define MODULE_NAME     "MySQL Access (AMXBans edition)"
 #define MODULE_VERSION  "2014.1"
 #define MODULE_AUTHOR   "AMX Mod Team"
 #define MODULE_URL      "www.amxmod.net"
