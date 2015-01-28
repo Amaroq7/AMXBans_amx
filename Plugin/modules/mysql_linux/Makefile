@@ -7,7 +7,7 @@ CSRCFILES =
 
 EXTRA_LIBS_LINUX = libraries/libmysqlclient.a -lz
 
-EXTRA_INCLUDEDIRS = -Iextra/include
+EXTRA_INCLUDEDIRS =
 
 EXTRA_FLAGS = -Dstrcmpi=strcasecmp
 
@@ -22,10 +22,6 @@ OBJDIR_LINUX=obj.linux
 
 CC_LINUX=gcc
 CXX_LINUX=g++
-
-INSTALL=install -m 644
-LD_WINDLL= PATH=$(PATH_WIN) $(PATH_WIN)/dllwrap
-DEFAULT=linux
 
 LIBFILE_LINUX = $(MODNAME)_i386.so
 
@@ -57,7 +53,7 @@ $(OBJDIR_LINUX)/%.o: $(SRCDIR)/%.c
 $(OBJDIR_LINUX)/%.o: $(SRCDIR)/%.cpp
 	$(DO_CXX_LINUX)
 
-default: $(DEFAULT)
+default: $(TARGET_LINUX)
 
 $(TARGET_LINUX): $(OBJDIR_LINUX) $(OBJ_LINUX) $(OBJC_LINUX)
 	$(LINK_LINUX)
@@ -65,9 +61,5 @@ $(TARGET_LINUX): $(OBJDIR_LINUX) $(OBJ_LINUX) $(OBJC_LINUX)
 $(OBJDIR_LINUX):
 	mkdir $@
 
-linux: $(TARGET_LINUX)
-
-clean: $(CLEAN)
-
-clean_linux:
-	-rm -f $(OBJDIR_LINUX)/*
+clean:
+	rm -rf $(OBJDIR_LINUX)
