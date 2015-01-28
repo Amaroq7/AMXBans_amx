@@ -7,6 +7,14 @@
 
 */
 
+/*Values to increase*/
+
+/////////////////////
+#define MAX_REASONS 25
+#define MAX_ADMINS 128
+#define MAX_DISCONNECTED_PLAYERS 15
+////////////////////
+
 //db table defines, no need to change something
 new const tbl_serverinfo[] = "_serverinfo";
 new const tbl_reasons[] = "_reasons";
@@ -21,18 +29,9 @@ new g_port[10];
 new bool:g_kicked_by_amxbans[33];
 new bool:g_being_banned[33];
 new bool:g_supported_game = true;
-
-//forwards
-enum MFHandles
-{
-	Ban_MotdOpen,
-	Player_Flagged,
-	Player_UnFlagged
-}
-new MFHandle[MFHandles];
-
-// For hudmessages
-new g_MyMsgSync;
+new g_iMaxPlayers;
+new pquery[1024];
+new menu[512];
 
 // Variables for menus
 new g_coloredMenus;
@@ -55,8 +54,8 @@ new g_choiceReason[33][128];
 new g_ban_type[33][3];
 new g_ident[50];
 
-new Array:g_banReasons;
-new Array:g_banReasons_Bantime;
+new g_banReasons[MAX_REASONS][128];
+new g_banReasons_Bantime[MAX_REASONS];
 
 // flagging
 new bool:g_being_flagged[33];
@@ -69,7 +68,6 @@ new g_flaggedTime[33];
 
 new pcvar_serverip;
 new pcvar_server_nick;
-new pcvar_discon_in_banlist;
 new pcvar_complainurl;
 new pcvar_debug;
 new pcvar_add_mapname;
@@ -88,7 +86,7 @@ new pcvar_default_banreason;
 
 // SQL
 
-new Handle:g_SqlX;
+new g_SqlX;
 new g_dbPrefix[32];
 
 new Float:kick_delay = 10.0; //motd_delay from DB
@@ -97,9 +95,9 @@ new Float:kick_delay = 10.0; //motd_delay from DB
 
 // disconnected Player
 
-new Array:g_disconPLname;
-new Array:g_disconPLauthid;
-new Array:g_disconPLip;
+new g_disconPLname[MAX_DISCONNECTED_PLAYERS][32];
+new g_disconPLauthid[MAX_DISCONNECTED_PLAYERS][35];
+new g_disconPLip[MAX_DISCONNECTED_PLAYERS][22];
 
 new g_highbantimesnum;
 new g_lowbantimesnum;

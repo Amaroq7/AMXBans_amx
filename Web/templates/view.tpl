@@ -205,31 +205,31 @@
 				<ul class="nice-list">
 					<li>
 						<div class="left">{"_PLAYER"|lang}</div>
-						<div class="right">{$last_ban.nickname}</div>
+						<div class="right">{$last_ban->nickname}</div>
 						<div class="clearer">&nbsp;</div>
 					</li>
 					
 					<li>
 						<div class="left">{"_STEAMID"|lang}</div>
-						<div class="right">{if $last_ban.steamid == "SI"}{"_NOTAVAILABLE"|lang}{else}{$last_ban.steamid}{/if}</div>
+						<div class="right">{if $last_ban->steamid == "SI"}{"_NOTAVAILABLE"|lang}{else}{$last_ban->steamid}{/if}</div>
 						<div class="clearer">&nbsp;</div>
 					</li>
 					
 					<li>
 						<div class="left">{"_REASON"|lang}</div>
-						<div class="right">{$last_ban.reason}</div>
+						<div class="right">{$last_ban->reason}</div>
 						<div class="clearer">&nbsp;</div>
 					</li>
 					
 					<li>
 						<div class="left">{"_DATE"|lang}</div>
-						<div class="right">{$last_ban.created|date_format:"%Y-%m-%d %H:%M"}</div>
+						<div class="right">{$last_ban->created|date_format:"%Y-%m-%d %H:%M"}</div>
 						<div class="clearer">&nbsp;</div>
 					</li>
 					
 					<li>
 						<div class="left">{"_EXPIRES"|lang}</div>
-						<div class="right">{if $last_ban.length == 0}{"_NEVER"|lang}{else}{if $last_ban.time > $last_ban.length}{"_ALREADYEXP"|lang}{else}{$last_ban.length|date_format:"%Y-%m-%d %H:%M"}{/if}{/if}</div>
+						<div class="right">{if $last_ban->length == 0}{"_NEVER"|lang}{else}{if $last_ban->time > $last_ban->length}{"_ALREADYEXP"|lang}{else}{$last_ban->length|date_format:"%Y-%m-%d %H:%M"}{/if}{/if}</div>
 						<div class="clearer">&nbsp;</div>
 					</li>
 

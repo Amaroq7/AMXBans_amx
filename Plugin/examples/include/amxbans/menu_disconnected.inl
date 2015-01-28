@@ -12,123 +12,172 @@
 #endif
 #define _menu_disconnected_included
 
-#include <amxmodx>
-#include <amxmisc>
-#include <sqlx>
-public cmdBanDisconnectedMenu(id,level,cid) {
+new g_hMenuid;
+new g_iAddedPlayers;
+new g_iChoosedPlayer[33];
+new g_iPos;
+
+public plugin_init_disconnected()
+{
+	g_hMenuid = register_menuid("disconnected_players");
+	register_menucmd(g_hMenuid, MENU_KEY_ALL, "disconnected_players_handler")
+}
+
+public cmdBanDisconnectedMenu(id,level,cid)
+{
 	if (!cmd_access(id,level,cid,1))
 		return PLUGIN_HANDLED
 		
-	new dnum=ArraySize(g_disconPLname)
-	
-	if(!dnum) {
-		client_print(id,print_chat,"[AMXBans] %L",id,"NO_DISCONNECTED_PLAYER_IN_LIST")
-		return PLUGIN_HANDLED
-	}
-	
-	new menu = menu_create("menu_discplayer","actionBanDisconnectedMenu")
-	
-	new szText[64]
-	if(g_coloredMenus)
-		formatex(szText,charsmax(szText),"\r%L\w",id,"BANDISCONNECTED_MENU",dnum)
-	else
-		formatex(szText,charsmax(szText),"%L",id,"BANDISCONNECTED_MENU",dnum)
-	
-	menu_setprop(menu,MPROP_TITLE,szText)
-	formatex(szText,charsmax(szText),"%L",id,"BACK")
-	menu_setprop(menu,MPROP_BACKNAME,szText)
-	formatex(szText,charsmax(szText),"%L",id,"MORE")
-	menu_setprop(menu,MPROP_NEXTNAME,szText)
-	formatex(szText,charsmax(szText),"%L",id,"EXIT")
-	menu_setprop(menu,MPROP_EXITNAME,szText)
-	
-	new szDisplay[128],szArId[3]
-	for(new i=dnum-1; i >= 0;i--) {
-		ArrayGetString(g_disconPLname,i,szDisplay,charsmax(szDisplay))
-		num_to_str(i,szArId,charsmax(szArId))
-		menu_additem(menu,szDisplay,szArId,0)
-	}
-	menu_display(id,menu,0)
+	DisplayMenu_Disconnected(id, 0);
 	
 	return PLUGIN_HANDLED
 }
-public actionBanDisconnectedMenu(id,menu,item) {
-	if(item < 0) {
-		menu_destroy(menu)
-		return PLUGIN_HANDLED
+
+public DisplayMenu_Disconnected(id, page)
+{
+	if(!g_iAddedPlayers)
+	{
+		client_print(id, print_chat, "[AMXBANS] %s", _T("No Players found in List!"));
+		return PLUGIN_HANDLED;
 	}
 	
-	new acc,szInfo[3],szText[128],callb
-	menu_item_getinfo(menu,item,acc,szInfo,charsmax(szInfo),szText,charsmax(szText),callb)
+	new keys = MENU_KEY_0;
+	new b;
+	new iLen;
 	
-	new aid=str_to_num(szInfo)
+	g_iPage[id] = page;
+		
+	if(g_coloredMenus)
+		iLen += formatex(menu,charsmax(menu),"\r%s\w^n^n",_T("The last players",id))
+	else
+		iLen += formatex(menu,charsmax(menu),"%s^n^n",_T("The last players",id))
+		
+	for(new i=page*7; i < next_page(page, g_iAddedPlayers, 7)*7;i++)
+	{
+		keys |= (1<<b);
+		b++;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d. \w%s^n", b, g_disconPLname[i]);
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n", b, g_disconPLname[i]);
+	}
+	if(is_lastpage(page, g_iAddedPlayers, 7) && !is_firstpage(page))
+	{
+		keys |= MENU_KEY_8;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r0.\w %s", _T("Back", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n0. %s", _T("Back", id), _T("Exit", id));
+	}
+	else if(!is_firstpage(page))
+	{
+		keys |= MENU_KEY_8|MENU_KEY_9;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r9.\w %s^n\r0.\w %s", _T("Back", id), _T("More", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n9. %s^n0. %s", _T("Back", id), _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && left_entries(page, g_iAddedPlayers, 7))
+	{
+		keys |= MENU_KEY_9;
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r9.\w %s^n\r0.\w %s", _T("More", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n9. %s^n0. %s", _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && !left_entries(page, g_iAddedPlayers, 7))
+	{
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r0.\w %s", _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n0. %s", _T("Exit", id));
+	}
 	
-	ArrayGetString(g_disconPLname,aid,g_choicePlayerName[id],charsmax(g_choicePlayerName[]))
-	ArrayGetString(g_disconPLauthid,aid,g_choicePlayerAuthid[id],charsmax(g_choicePlayerAuthid[]))
-	ArrayGetString(g_disconPLip,aid,g_choicePlayerIp[id],charsmax(g_choicePlayerIp[]))
+	show_menu(id, keys, menu, -1, "disconnected_players");
+	return PLUGIN_HANDLED;
+}
+
+public disconnected_players_handler(id,key)
+{
+	if(key == 7)
+	{
+		DisplayMenu_Disconnected(id, --g_iPage[id])
+		return PLUGIN_HANDLED;
+	}
+	else if(key == 8)
+	{
+		DisplayMenu_Disconnected(id, ++g_iPage[id])
+		return PLUGIN_HANDLED;
+	}
+	else if(key == 9)
+		return PLUGIN_HANDLED;
+	
+	g_iChoosedPlayer[id]=g_iPage[id]*7+key;
+	
+	copy(g_choicePlayerName[id], charsmax(g_choicePlayerName[]), g_disconPLname[g_iChoosedPlayer[id]])
+	copy(g_choicePlayerAuthid[id], charsmax(g_choicePlayerAuthid[]), g_disconPLauthid[g_iChoosedPlayer[id]])
+	copy(g_choicePlayerIp[id], charsmax(g_choicePlayerIp[]), g_disconPLip[g_iChoosedPlayer[id]]);
+	
 	g_choicePlayerId[id]=-1
 	
-	if(get_pcvar_num(pcvar_debug) >= 2)
+	if(get_cvarptr_num(pcvar_debug) >= 2)
 		log_amx("[AMXBans PlayerDiscMenu %d] %d choice: %s | %s | %s | %d",menu,id,g_choicePlayerName[id],g_choicePlayerAuthid[id],g_choicePlayerIp[id],g_choicePlayerId[id])
 	
-	if(amxbans_get_static_bantime(id)) {
-		set_task(0.2,"cmdReasonMenu",id)
-	} else {
-		set_task(0.2,"cmdBantimeMenu",id)
+	g_iPage[id] = 0;
+	if(g_iAdminUseStaticBantime[id])
+	{
+		cmdReasonMenu(id, 0)
+	}
+	else
+	{
+		cmdBantimeMenu(id, 0)
 	}
 	
-	menu_destroy(menu)
 	return PLUGIN_HANDLED
 }
 /*************************************************************************************/
-public cmdMenuBanDisc(id) {
-	if(!id) return PLUGIN_HANDLED
+public cmdMenuBanDisc(id)
+{
+	if(!id)
+		return PLUGIN_HANDLED
 	
 	if(!get_ban_type(g_ban_type[id],charsmax(g_ban_type),g_choicePlayerAuthid[id],g_choicePlayerIp[id])) {
 		log_amx("[AMXBans Disc ERROR] Steamid / IP Invalid! Bantype: <%s> | Authid: <%s> | IP: <%s>",g_ban_type[id],g_choicePlayerAuthid[id],g_choicePlayerIp[id])
 		return PLUGIN_HANDLED
 	}
 	
-	if(get_pcvar_num(pcvar_debug) >= 2) {
+	if(get_cvarptr_num(pcvar_debug) >= 2) {
 		log_amx("[AMXBans cmdMenuBanDisc %d] %d | %s | %s | %s | %s (%d min)",id,\
 		g_choicePlayerId[id],g_choicePlayerName[id],g_choicePlayerAuthid[id],g_choicePlayerIp[id],g_choiceReason[id],g_choiceTime[id])
 	}
 	
-	new pquery[1024]
-	
-	if (equal(g_ban_type[id], "S")) {
+	if (equal(g_ban_type[id], "S"))
+	{
 		formatex(pquery, charsmax(pquery),"SELECT player_id FROM %s%s WHERE player_id='%s' and expired=0", g_dbPrefix, tbl_bans, g_choicePlayerAuthid[id])
-		if ( get_pcvar_num(pcvar_debug) >= 2 )
+		if ( get_cvarptr_num(pcvar_debug) >= 2 )
 			log_amx("[AMXBans cmdMenuBanDisc] Banned a player by SteamID")
-	} else {
+	}
+	else
+	{
 		formatex(pquery, charsmax(pquery),"SELECT player_ip FROM %s%s WHERE player_ip='%s' and expired=0", g_dbPrefix, tbl_bans, g_choicePlayerIp[id])
-		if ( get_pcvar_num(pcvar_debug) >= 2 )
+		if ( get_cvarptr_num(pcvar_debug) >= 2 )
 			log_amx("[AMXBans cmdMenuBanDisc] Banned a player by IP/steamID")
 	}
 	
-	
-	new data[3]
-	data[0] = id
-	SQL_ThreadQuery(g_SqlX, "_cmdMenuBanDisc", pquery, data, 3)
+	_cmdMenuBanDisc(id);
 	
 	return PLUGIN_HANDLED	
 }
-public _cmdMenuBanDisc(failstate, Handle:query, error[], errnum, data[], size)
+public _cmdMenuBanDisc(id)
 {
-	new id = data[0]
-	
-	if ( get_pcvar_num(pcvar_debug) >= 1 )
+	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[cmdMenuBanDisc function 2]")
-		
-	if (failstate) {
-		new szQuery[256]
-		SQL_GetQueryString(query,szQuery,255)
-		MySqlX_ThreadError( szQuery, error, errnum, failstate, 6 )
-		return PLUGIN_HANDLED
-	}
 	
-	if (SQL_NumResults(query)) {
-		client_print(id,print_console,"[AMXBANS] %L",id,"ALREADY_BANNED", g_choicePlayerAuthid[id], g_choicePlayerIp[id])
+	if (mysql_num_rows(g_SqlX)) {
+		client_print(id,print_console,"[AMXBANS] %s",_T("Player is already banned."))
 		g_being_banned[id] = false
 		return PLUGIN_HANDLED
 	}
@@ -141,7 +190,7 @@ public _cmdMenuBanDisc(failstate, Handle:query, error[], errnum, data[], size)
 	new server_name[256]
 	get_cvar_string("hostname", server_name, charsmax(server_name))
 	
-	if ( get_pcvar_num(pcvar_add_mapname) == 1 ) {
+	if ( get_cvarptr_num(pcvar_add_mapname) == 1 ) {
 		new mapname[32]
 		get_mapname(mapname,31)
 		format(server_name,charsmax(server_name),"%s (%s)",server_name,mapname)
@@ -152,100 +201,101 @@ public _cmdMenuBanDisc(failstate, Handle:query, error[], errnum, data[], size)
 	new player_name[64]
 	mysql_escape_string(g_choicePlayerName[id],player_name,charsmax(player_name))
 	
-	new pquery[1024]
+	copy(g_disconPLauthid[g_iChoosedPlayer[id]], charsmax(g_disconPLauthid[]), "");
+	copy(g_disconPLip[g_iChoosedPlayer[id]], charsmax(g_disconPLip[]), "");
+	copy(g_disconPLname[g_iChoosedPlayer[id]], charsmax(g_disconPLname[]), "");
 	
-	formatex(pquery, charsmax(pquery), "INSERT INTO `%s%s` (player_id,player_ip,player_nick,admin_ip,admin_id,admin_nick,ban_type,ban_reason,ban_created,ban_length,server_name,server_ip,expired) \
+	if(--g_iAddedPlayers != 0) //Move entries if array is not clear
+	{
+		move_array(g_disconPLauthid, charsmax(g_disconPLauthid[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+		move_array(g_disconPLip, charsmax(g_disconPLip[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+		move_array(g_disconPLname, charsmax(g_disconPLname[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+	}
+	
+	mysql_query(g_SqlX, "INSERT INTO `%s%s` (player_id,player_ip,player_nick,admin_ip,admin_id,admin_nick,ban_type,ban_reason,ban_created,ban_length,server_name,server_ip,expired) \
 			VALUES('%s','%s','%s','%s','%s','%s','%s','%s',UNIX_TIMESTAMP(NOW()),%d,'%s','%s:%s',0)", \
 			g_dbPrefix, tbl_bans, g_choicePlayerAuthid[id],g_choicePlayerIp[id],player_name,admin_ip,admin_steamid,admin_nick,g_ban_type[id],g_choiceReason[id],g_choiceTime[id],servername_safe,g_ip,g_port)
 	
-	new data[3]
-	data[0] = id
-	SQL_ThreadQuery(g_SqlX, "__cmdMenuBanDisc", pquery, data, 3)
+	__cmdMenuBanDisc(id);
 	
 	return PLUGIN_HANDLED
 }
-public __cmdMenuBanDisc(failstate, Handle:query, error[], errnum, data[], size) {
-	new id = data[0]
-	
-	if (failstate) {
-		new szQuery[256]
-		SQL_GetQueryString(query,szQuery,255)
-		MySqlX_ThreadError( szQuery, error, errnum, failstate, 6 )
-		return PLUGIN_HANDLED
-	}
-	
-	if ( get_pcvar_num(pcvar_debug) >= 1 )
+public __cmdMenuBanDisc(id)
+{
+	if ( get_cvarptr_num(pcvar_debug) >= 1 )
 		log_amx("[AMXBans cmdMenuBanDisc function 3] %d: %s",id,g_choicePlayerName[id])
 	
-	if (SQL_GetInsertId(query)) {
-		client_print(id,print_console,"[AMXBANS] %L",id,"BAN_DISCONNECTED_PLAYER_SUCCESS")
-	} else {
-		client_print(id,print_console,"[AMXBANS] %L",id,"BAN_DISCONNECTED_PLAYER_FAILED")
+	if(mysql_insert_id(g_SqlX))
+	{
+		client_print(id,print_console,"[AMXBANS] %s",_T("Player has been banned!"))
+	}
+	else
+	{
+		client_print(id,print_console,"[AMXBANS] %s", _T("Banning failed!"))
 	}
 	return PLUGIN_HANDLED
 }
 /*************************************************************************************/
-disconnect_remove_player(id) {
-	if(is_user_bot(id)) return PLUGIN_CONTINUE
+disconnect_remove_player(id)
+{
+	if(is_user_bot(id) || is_user_hltv(id))
+		return PLUGIN_CONTINUE;
+		
+	new name[32];
+	get_user_name(id,name,charsmax(name))
 	
-	new dnum=ArraySize(g_disconPLauthid)
-	if(!dnum) return PLUGIN_CONTINUE
-	
-	new authid[35],tmpid[35]
-	get_user_authid(id,authid,charsmax(authid))
-	
-	for(new i;i < dnum;i++) {
-		ArrayGetString(g_disconPLauthid,i,tmpid,charsmax(tmpid))
-		if(!equal(authid,tmpid)) continue
-		disc_array_remove_item(i)
-		break
+	for(new i=0;i < MAX_DISCONNECTED_PLAYERS;i++)
+	{
+		if(!equal(name,g_disconPLname[i]))
+			continue;
+		
+		copy(g_disconPLname[i], charsmax(g_disconPLname[]), "");
+		copy(g_disconPLip[i], charsmax(g_disconPLip[]), "");
+		copy(g_disconPLauthid[i], charsmax(g_disconPLauthid[]), "");
+		
+		if(--g_iAddedPlayers != 0)
+		{
+			move_array(g_disconPLauthid, charsmax(g_disconPLauthid[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+			move_array(g_disconPLip, charsmax(g_disconPLip[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+			move_array(g_disconPLname, charsmax(g_disconPLname[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+		}
+		
+		break;
 	}
-	disc_debug_list()
 	
 	return PLUGIN_CONTINUE
 }
-disconnected_add_player(id) {
-	if(is_user_bot(id)) return PLUGIN_CONTINUE
-	
-	new maxnum=get_pcvar_num(pcvar_discon_in_banlist)
-	if(!maxnum) return PLUGIN_CONTINUE
+disconnected_add_player(id)
+{
+	if(is_user_bot(id) || is_user_hltv(id))
+		return PLUGIN_CONTINUE;
 	
 	new name[32],authid[35],ip[22]
 	get_user_name(id,name,charsmax(name))
 	get_user_authid(id,authid,charsmax(authid))
 	get_user_ip(id,ip,charsmax(ip),1)
 	
-	new dnum=ArraySize(g_disconPLname)
+	ArrayPushString(g_disconPLname, charsmax(g_disconPLname[]), name, 1)
+	ArrayPushString(g_disconPLauthid, charsmax(g_disconPLip[]), authid, 0)
+	ArrayPushString(g_disconPLip, charsmax(g_disconPLname[]), ip, 0)
 	
+	move_array(g_disconPLauthid, charsmax(g_disconPLauthid[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+	move_array(g_disconPLip, charsmax(g_disconPLip[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
+	move_array(g_disconPLname, charsmax(g_disconPLname[]), MAX_DISCONNECTED_PLAYERS, g_iPos);
 	
-	ArrayPushString(g_disconPLname,name)
-	ArrayPushString(g_disconPLauthid,authid)
-	ArrayPushString(g_disconPLip,ip)
+	g_iAddedPlayers++;
 	
-	while(dnum >= maxnum) {
-		disc_array_remove_item(0)
-		dnum--
-	}
-	disc_debug_list()
 	return PLUGIN_CONTINUE
 }
-stock disc_array_remove_item(item) {
-	ArrayDeleteItem(g_disconPLname,item)
-	ArrayDeleteItem(g_disconPLauthid,item)
-	ArrayDeleteItem(g_disconPLip,item)
-}
-stock disc_debug_list() {
-	if(get_pcvar_num(pcvar_debug) < 4) return PLUGIN_CONTINUE
-	
-	new dnum=ArraySize(g_disconPLname)
-	new maxnum=get_pcvar_num(pcvar_discon_in_banlist)
-	
-	for(new i;i < dnum;i++) {
-		log_amx("[AMXBans DiscList %d/%d] %d %a | %a | %a",dnum,maxnum,i,\
-			ArrayGetStringHandle(g_disconPLname,i),
-			ArrayGetStringHandle(g_disconPLauthid,i),
-			ArrayGetStringHandle(g_disconPLip,i))
+
+ArrayPushString(array[][], array_size, string[], inc)
+{
+	if(g_iPos >= MAX_DISCONNECTED_PLAYERS)
+	{
+		g_iPos = 0;
 	}
-	return PLUGIN_CONTINUE
-}
+	copy(array[g_iPos], array_size-1, string);
 	
+	if(inc)
+		g_iPos++;
+}

@@ -12,19 +12,11 @@
 #endif
 #define _web_handshake_included
 
-#include <amxmodx>
-
 public cmdLst(id,level,cid)
 {
-	if(id) return PLUGIN_HANDLED
-	
 	new name[32],authid[35],ip[22],status,immun,userid
 	
-	new plnum=get_maxplayers()
-	
-	//console_print(id,"%c%c%c%c",-1,-1,-1,-1)
-	
-	for(new pid = 1; pid <= plnum; pid++)
+	for(new pid = 1; pid <= g_iMaxPlayers; pid++)
 	{
 		if(is_user_connected(pid)) {
 			get_user_name(pid,name,charsmax(name))
@@ -39,7 +31,7 @@ public cmdLst(id,level,cid)
 			immun=0
 			if(get_user_flags(pid) & ADMIN_IMMUNITY) immun=1
 			
-			console_print(id,"%s%c%d%c%s%c%s%c%d%c%d",name,-4,userid,-4,authid,-4,ip,-4,status,-4,immun)
+			server_print("%s %d %s %s %d %d",name,userid,authid,ip,status,immun)
 		}
 	}
 	return PLUGIN_HANDLED

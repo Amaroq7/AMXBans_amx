@@ -70,6 +70,9 @@ function GetAccess(id) {
 	SetBox( "chks" , access , "s" );
 	SetBox( "chkt" , access , "t" );
 	SetBox( "chku" , access , "u" );
+	SetBox( "chkv" , access , "v" );
+	SetBox( "chkw" , access , "w" );
+	SetBox( "chky" , access , "y" );
 	SetBox( "chkz" , access , "z" );
 }
 function SetBox( id , access , flag ) {
@@ -104,6 +107,9 @@ function SaveAccess( id ) {
 	access += GetBox( "chks" , "s");
 	access += GetBox( "chkt" , "t");
 	access += GetBox( "chku" , "u");
+	access += GetBox( "chkv" , "v");
+	access += GetBox( "chkw" , "w");
+	access += GetBox( "chky" , "y");
 	access += GetBox( "chkz" , "z");
 	
 	opener.document.getElementById(id).value = access;
@@ -130,7 +136,7 @@ function WindowClose() {
 <tr><td><input type="checkbox" id="chka" >a - Immunity (cant be kicked / banned etc.)</input></td></tr>
 <tr><td><input type="checkbox" id="chkb" >b - Reserved Slots (can use reserved Slots)</input></td></tr>
 <tr><td><input type="checkbox" id="chkc" >c - amx_kick Command</input></td></tr>
-<tr><td><input type="checkbox" id="chkd" >d - amx_ban and amx_unban Command</input></td></tr>
+<tr><td><input type="checkbox" id="chkd" >d - amx_ban Command (temporary bans only)</input></td></tr>
 <tr><td><input type="checkbox" id="chke" >e - amx_slay and amx_slap Command</input></td></tr>
 <tr><td><input type="checkbox" id="chkf" >f - amx_map Command</input></td></tr>
 <tr><td><input type="checkbox" id="chkg" >g - amx_cvar Command (not all CVARS available)</input></td></tr>
@@ -139,7 +145,7 @@ function WindowClose() {
 <tr><td><input type="checkbox" id="chkj" >j - amx_vote and other Vote-Commands</input></td></tr>
 <tr><td><input type="checkbox" id="chkk" >k - Access to sv_password cvar (through amx_cvar Command)</input></td></tr>
 <tr><td><input type="checkbox" id="chkl" >l - Access to amx_rcon command and rcon_password cvar (through amx_cvar Command)</input></td></tr>
-<tr><td><input type="checkbox" id="chkm" >m - Userdefined Level A (for other Plugins)</input></td></tr>
+<tr><td><input type="checkbox" id="chkm" >m - Userdefined Level A (access to amx_teleportmenu command)</input></td></tr>
 <tr><td><input type="checkbox" id="chkn" >n - Userdefined Level B</input></td></tr>
 <tr><td><input type="checkbox" id="chko" >o - Userdefined Level C</input></td></tr>
 <tr><td><input type="checkbox" id="chkp" >p - Userdefined Level D</input></td></tr>
@@ -147,7 +153,10 @@ function WindowClose() {
 <tr><td><input type="checkbox" id="chkr" >r - Userdefined Level F</input></td></tr>
 <tr><td><input type="checkbox" id="chks" >s - Userdefined Level G</input></td></tr>
 <tr><td><input type="checkbox" id="chkt" >t - Userdefined Level H</input></td></tr>
-<tr><td><input type="checkbox" id="chku" >u - Menu-Access</input></td></tr>
+<tr><td><input type="checkbox" id="chkt" >u - Menu-Access</input></td></tr>
+<tr><td><input type="checkbox" id="chku" >v - permanent bans (to permanently ban, you need both "d" and "v" flags)</input></td></tr>
+<tr><td><input type="checkbox" id="chkz" >w - amx_unban command</input></td></tr>
+<tr><td><input type="checkbox" id="chku" >y - supreme admin (this flag permits you to execute commands on admins who have immunity)</input></td></tr>
 <tr><td><input type="checkbox" id="chkz" >z - User (no Admin)</input></td></tr>
 <tr><td align="center">
 	<img src="../images/accept.png" style="cursor:pointer;" title="Accept" onclick="SaveAccess('<?php echo $id ?>');"/>

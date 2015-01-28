@@ -35,6 +35,9 @@
 		SetBox( "chks" , access , "s" );
 		SetBox( "chkt" , access , "t" );
 		SetBox( "chku" , access , "u" );
+		SetBox( "chkv" , access , "v" );
+		SetBox( "chkw" , access , "w" );
+		SetBox( "chky" , access , "y" );
 		SetBox( "chkz" , access , "z" );
 	}
 	function SetBox( id , access , flag ) {
@@ -69,6 +72,9 @@
 		access += GetBox( "chks" , "s");
 		access += GetBox( "chkt" , "t");
 		access += GetBox( "chku" , "u");
+		access += GetBox( "chkv" , "v");
+		access += GetBox( "chkw" , "w");
+		access += GetBox( "chky" , "y");
 		access += GetBox( "chkz" , "z");
 		
 		opener.document.getElementById(id).value = access;
@@ -136,9 +142,9 @@
 						<input type="checkbox" id="chkc"/> 
 						c - amx_kick Command <br/>
 						<input type="checkbox" id="chkd"/> 
-						d - amx_ban and amx_unban Command <br/>
+						d - amx_ban Command (temporary bans only)<br/>
 						<input type="checkbox" id="chke"/> 
-						e - amx_slay and amx_slap Command <br/>
+						e - amx_slay and amx_slap and amx_teammenu Commands <br/>
 						<input type="checkbox" id="chkf"/> 
 						f - amx_map Command <br/>
 						<input type="checkbox" id="chkg"/> 
@@ -154,7 +160,7 @@
 						<input type="checkbox" id="chkl"/> 
 						l - Access to amx_rcon command and rcon_password cvar (through amx_cvar Command) <br/>
 						<input type="checkbox" id="chkm"/> 
-						m - Userdefined Level A (for other Plugins) <br/>
+						m - Userdefined Level A (access to amx_teleportmenu command) <br/>
 						<input type="checkbox" id="chkn"/> 
 						n - Userdefined Level B <br/>
 						<input type="checkbox" id="chko"/> 
@@ -171,6 +177,12 @@
 						t - Userdefined Level H<br/> 
 						<input type="checkbox" id="chku"/> 
 						u - Menu-Access <br/>
+						<input type="checkbox" id="chku"/> 
+						v - permanent bans (to permanently ban, you need both "d" and "v" flags) <br/>
+						<input type="checkbox" id="chku"/> 
+						w - amx_unban command <br/>
+						<input type="checkbox" id="chku"/> 
+						y - supreme admin (this flag permits you to execute commands on admins who have immunity) <br/>
 						<input type="checkbox" id="chkz"/> 
 						z - User (no Admin)<br/>
 						<input type="button" class="button" name="accept" value="Accept" onclick="SaveAccess('custom_flags_2');"/> 

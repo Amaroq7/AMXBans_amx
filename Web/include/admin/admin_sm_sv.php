@@ -63,8 +63,8 @@
 				case 'reload': $command="amx_reloadadmins";break;
 				case 'restart': $command="restart";$max_response_pages=3;break;
 				case 'status': $command="status";break;
-				case 'plugins': $command="amx_plugins";$max_response_pages=3;break;
-				case 'modules': $command="amx_modules";$max_response_pages=3;break;
+				case 'plugins': $command="amx plugins";$max_response_pages=3;break;
+				case 'modules': $command="amx modules";$max_response_pages=3;break;
 				case 'metalist': $command="meta list";break;
 				default: $command="";
 			}

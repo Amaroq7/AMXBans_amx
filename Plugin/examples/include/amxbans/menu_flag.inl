@@ -12,172 +12,438 @@
 #endif
 #define _menu_flag_included
 
-#include <amxmodx>
-#include <amxmisc>
-#include <sqlx>
+new g_hFlagMenu;
+new g_hUnflagMenu;
+new g_hFlagtimeMenu;
+new g_hFlagReasonMenu;
 
-public cmdFlaggingMenu(id,level,cid) {
+public plugin_init_flagging()
+{
+	g_hFlagMenu = register_menuid("menu_flagplayer");
+	g_hUnflagMenu = register_menuid("menu_unflagplayer");
+	g_hFlagtimeMenu = register_menuid("menu_flagtime");
+	g_hFlagReasonMenu = register_menuid("menu_flagreason");
+	register_menucmd(g_hFlagMenu, MENU_KEY_ALL, "actionFlaggingMenu");
+	register_menucmd(g_hUnflagMenu, MENU_KEY_0|MENU_KEY_1|MENU_KEY_2, "actionUnflagMenu");
+	register_menucmd(g_hFlagtimeMenu, MENU_KEY_ALL, "actionFlagtimeMenu");
+	register_menucmd(g_hFlagReasonMenu, MENU_KEY_ALL, "actionFlagReasonMenu");
+}
+
+public cmdFlaggingMenu(id,level,cid)
+{
 	if (!cmd_access(id,level,cid,1))
 		return PLUGIN_HANDLED
-	
-	new menu = menu_create("menu_flagplayer","actionFlaggingMenu")
-	new callback=menu_makecallback("callback_MenuGetPlayers")
-	
-	MenuSetProps(id,menu,"FLAGGING_MENU")
-	MenuGetPlayers(menu,callback)
-	
-	menu_display(id,menu,0)
-	
+		
+	g_iPage[id] = 0;
+	cmdFlaggingMenu2(id, 0);
 	return PLUGIN_HANDLED
 }
-public actionFlaggingMenu(id,menu,item) {
-	if(item < 0) {
-		menu_destroy(menu)
-		return PLUGIN_HANDLED
+public cmdFlaggingMenu2(id, page)
+{
+	new iLen, b, keys = MENU_KEY_0;
+	
+	if(g_coloredMenus)
+		iLen += formatex(menu, charsmax(menu), "\r%s\w^n^n", _T("Flag player",id));
+	else
+		iLen += formatex(menu, charsmax(menu), "%s^n^n", _T("Flag player",id));
+	
+	new iFlags, iFlags_admin = get_user_flags(id);
+	get_players(g_iPlayers[id], g_iNum[id], "ch");
+	
+	for(new i=page*7;i<next_page(page, g_iNum[id], 7)*7;i++)
+	{
+		if(!g_iPlayers[id][i])
+			continue;
+		get_user_name(g_iPlayers[id][i], g_PlayerName[i],charsmax(g_PlayerName[]));
+		
+		iFlags = get_user_flags(g_iPlayers[id][i]);
+		if((iFlags & ADMIN_IMMUNITY) && !(iFlags_admin & ADMIN_SUPREME))
+		{
+			if(g_coloredMenus)
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\d#.\w %s\r *\w^n", g_PlayerName[i]);
+			else
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "#. %s *^n", g_PlayerName[i]);
+		}
+		else if((iFlags & ADMIN_IMMUNITY) && (iFlags_admin & ADMIN_SUPREME))
+		{
+			keys |= (1<<b)
+			b++;
+			
+			if(g_coloredMenus)
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d.\w %s\r *\w^n", b, g_PlayerName[i]);
+			else
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s *^n", b, g_PlayerName[i]);
+				
+		}
+		
+		else if(!iFlags || iFlags & ADMIN_USER)
+		{
+			keys |= (1<<b)
+			b++;
+			
+			if(g_coloredMenus)
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d.\w %s^n", b, g_PlayerName[i]);
+			else
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n", b, g_PlayerName[i]);
+				
+		}
+		else if((iFlags & ADMIN_SUPREME) && (iFlags_admin && ADMIN_SUPREME))
+		{
+			keys |= (1<<b)
+			b++;
+			
+			if(g_coloredMenus)
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d.\w %s\r *\w^n", b, g_PlayerName[i]);
+			else
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s *^n", b, g_PlayerName[i]);
+		}
 	}
 	
-	new acc,szInfo[3],szText[128],callb
-	menu_item_getinfo(menu,item,acc,szInfo,charsmax(szInfo),szText,charsmax(szText),callb)
+	if(is_lastpage(page, g_iNum[id], 7) && !is_firstpage(page))
+	{
+		keys |= MENU_KEY_8;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r0.\w %s", _T("Back", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n0. %s", _T("Back", id), _T("Exit", id));
+	}
+	else if(!is_firstpage(page))
+	{
+		keys |= MENU_KEY_8|MENU_KEY_9;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r9.\w %s^n\r0.\w %s", _T("Back", id), _T("More", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n9. %s^n0. %s", _T("Back", id), _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && left_entries(page, g_iNum[id], 7))
+	{
+		keys |= MENU_KEY_9;
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r9.\w %s^n\r0.\w %s", _T("More", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n9. %s^n0. %s", _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && !left_entries(page, g_iNum[id], 7))
+	{
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r0.\w %s", _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n0. %s", _T("Exit", id));
+	}
 	
-	new pid=str_to_num(szInfo)
+	show_menu(id, keys, menu, -1, "menu_flagplayer");
+	return PLUGIN_HANDLED
+}
+public actionFlaggingMenu(id,key)
+{
+	if(key == 7)
+	{
+		cmdFlaggingMenu2(id, --g_iPage[id]);
+		return PLUGIN_HANDLED;
+	}
+	else if(key == 8)
+	{
+		cmdFlaggingMenu2(id, ++g_iPage[id]);
+		return PLUGIN_HANDLED;
+	}
+	else if(key == 9)
+		return PLUGIN_HANDLED;
 	
-	copy(g_choicePlayerName[id],charsmax(g_choicePlayerName[]),g_PlayerName[pid])
+	new pid=g_iPlayers[id][g_iPage[id]*7+key];
+	
+	copy(g_choicePlayerName[id],charsmax(g_choicePlayerName[]),g_PlayerName[pid-1])
 	get_user_authid(pid,g_choicePlayerAuthid[id],charsmax(g_choicePlayerAuthid[]))
 	get_user_ip(pid,g_choicePlayerIp[id],charsmax(g_choicePlayerIp[]),1)
 	g_choicePlayerId[id]=pid
 	
-	if(get_pcvar_num(pcvar_debug) >= 2)
-		log_amx("[AMXBans FlagPlayerMenu %d] %d choice: %d | %s | %s | %d",menu,id,g_choicePlayerName[id],g_choicePlayerAuthid[id],g_choicePlayerIp[id],g_choicePlayerId[id])
+	if(get_cvarptr_num(pcvar_debug) >= 2)
+		log_amx("[AMXBans FlagPlayerMenu %d] %d choice: %d | %s | %s | %d",g_hFlagMenu,id,g_choicePlayerName[id],g_choicePlayerAuthid[id],g_choicePlayerIp[id],g_choicePlayerId[id])
 	
+	g_iPage[id] = 0;
 	if(g_being_flagged[pid])
-		set_task(0.2,"cmdUnflagMenu",id)
+		cmdUnflagMenu2(id, 0)
 	else
-		set_task(0.2,"cmdFlagtimeMenu",id)
-	
-	menu_destroy(menu)
+		cmdFlagtimeMenu(id, 0)
+		
 	return PLUGIN_HANDLED
 }
-public cmdUnflagMenu(id,level,cid) {
-	if (!cmd_access(id,level,cid,1))
+public cmdUnflagMenu(id,level,cid)
+{
+	if(!cmd_access(id,level,cid,1))
 		return PLUGIN_HANDLED
 	
-	new menu = menu_create("menu_unflagplayer","actionUnflagMenu")
+	g_iPage[id] = 0;
+	cmdUnflagMenu2(id, 0);
+	return PLUGIN_HANDLED;
+}
+public cmdUnflagMenu2(id, page)
+{
+	new iLen;
+	new szTime[64]
 	
-	MenuSetProps(id,menu,"UNFLAG_MENU")
-	
-	new szDisplay[128],szTime[64]
+	if(g_coloredMenus)
+		iLen += formatex(menu, charsmax(menu), "\r%s\w^n^n", _T("Player already flagged! Options:",id));
+	else
+		iLen += formatex(menu, charsmax(menu), "%s^n^n", _T("Player already flagged! Options:",id));
 	
 	get_flagtime_string(id,g_flaggedTime[g_choicePlayerId[id]],szTime,charsmax(szTime),1)
 	if(g_coloredMenus)
 		format(szTime,charsmax(szTime),"\y(%s: %s)\w",szTime,g_flaggedReason[g_choicePlayerId[id]])
 	else
 		format(szTime,charsmax(szTime),"(%s: %s)",szTime,g_flaggedReason[g_choicePlayerId[id]])
+		
+	if(g_coloredMenus)
+		iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r1.\w %s %s^n\r2.\w %s^n^n\r0.\w %s", _T("Remove flag",id), szTime, _T("Set new flag",id), _T("Exit",id));
+	else
+		iLen += formatex(menu[iLen], charsmax(menu)-iLen, "1. %s %s^n2. %s^n^n0. %s", _T("Remove flag",id), szTime, _T("Set new flag",id), _T("Exit",id));
 	
-	formatex(szDisplay,charsmax(szDisplay),"%L %s",id,"UNFLAG_PLAYER",szTime)
-	menu_additem(menu,szDisplay,"1",0)
-	formatex(szDisplay,charsmax(szDisplay),"%L",id,"FLAG_PLAYER_NEW")
-	menu_additem(menu,szDisplay,"2",0)
-	
-	menu_display(id,menu,0)
-	
+	show_menu(id, MENU_KEY_0|MENU_KEY_1|MENU_KEY_2, menu, -1, "menu_unflagplayer");
 	return PLUGIN_HANDLED
 }
-public actionUnflagMenu(id,menu,item) {
-	if(item < 0) {
-		menu_destroy(menu)
-		return PLUGIN_HANDLED
-	}
+public actionUnflagMenu(id,key)
+{
+	g_iPage[id] = 0;
+	if(key == 9)
+		return PLUGIN_HANDLED;
 	
-	new acc,szInfo[3],szText[128],callb
-	menu_item_getinfo(menu,item,acc,szInfo,charsmax(szInfo),szText,charsmax(szText),callb)
-	
-	new mid=str_to_num(szInfo)
-	
-	if(mid==1) {
+	else if(!key)
+	{
 		UnflagPlayer(id,1)
-	} else if(mid==2) {
+	}
+	else if(key == 1)
+	{
 		UnflagPlayer(id,0)
-		set_task(0.2,"cmdFlagtimeMenu",id)
+		cmdFlagtimeMenu(id, 0)
 	}
 	
-	menu_destroy(menu)
 	return PLUGIN_HANDLED
 }
-public cmdFlagtimeMenu(id) {
+public cmdFlagtimeMenu(id, page)
+{
+	new iLen, b, keys = MENU_KEY_0;
+	new iPerm;
 	
-	new menu = menu_create("menu_flagtime","actionFlagtimeMenu")
-	
-	MenuSetProps(id,menu,"FLAGTIME_MENU")
-	MenuGetFlagtime(id,menu)
-	
-	menu_display(id,menu,0)
-	
-	return PLUGIN_HANDLED
-}
-public actionFlagtimeMenu(id,menu,item) {
-	if(item < 0) {
-		menu_destroy(menu)
-		return PLUGIN_HANDLED
+	if(g_coloredMenus)
+		iLen += formatex(menu, charsmax(menu), "\r%s\w^n^n", _T("Flagtime menu",id));
+	else
+		iLen += formatex(menu, charsmax(menu), "%s^n^n", _T("Flagtime menu",id));
+		
+	if(!g_flagtimesnum)
+	{
+		log_amx("[AMXBans Notice] Flagtimes empty, loading defaults")
+		loadDefaultBantimes(3)
 	}
 	
-	new acc,szInfo[11],szText[128],callb
-	menu_item_getinfo(menu,item,acc,szInfo,10,szText,127,callb)
-	
-	g_choiceTime[id]=str_to_num(szInfo)
-	
-	if(get_pcvar_num(pcvar_debug) >= 2)
-		log_amx("[AMXBans FlagtimeMenu %d] %d choice: %d min",menu,id,g_choiceTime[id])
-	
-	set_task(0.2,"cmdFlagReasonMenu",id)
-	
-	menu_destroy(menu)
-	return PLUGIN_HANDLED
-}
-public cmdFlagReasonMenu(id) {
-	
-	new menu = menu_create("menu_flagreason","actionFlagReasonMenu")
-	
-	MenuSetProps(id,menu,"FLAGREASON_MENU")
-	MenuGetReason(id,menu,amxbans_get_static_bantime(id))
-	
-	menu_display(id,menu,0)
-	
-	return PLUGIN_HANDLED
-}
-public actionFlagReasonMenu(id,menu,item) {
-	if(item < 0) {
-		menu_destroy(menu)
-		return PLUGIN_HANDLED
+	new szDisplay[128];
+	for(new i=page*7;i < next_page(page, g_flagtimesnum, 7)*7;i++)
+	{
+		if(!g_FlagMenuValues[i] && !iPerm)
+			iPerm = 1;
+		
+		else if(!g_FlagMenuValues[i] && iPerm)
+			continue;
+			
+		get_flagtime_string(id,g_FlagMenuValues[i],szDisplay,charsmax(szDisplay))
+		
+		keys |= (1<<b)
+		b++;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "\r%d.\w %s^n", b, szDisplay);
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "%d. %s^n", b, szDisplay);
 	}
 	
-	new acc,szInfo[3],szText[128],callb
-	menu_item_getinfo(menu,item,acc,szInfo,charsmax(szInfo),szText,charsmax(szText),callb)
+	if(is_lastpage(page, g_flagtimesnum, 7) && !is_firstpage(page))
+	{
+		keys |= MENU_KEY_8;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r0.\w %s", _T("Back", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n0. %s", _T("Back", id), _T("Exit", id));
+	}
+	else if(!is_firstpage(page))
+	{
+		keys |= MENU_KEY_8|MENU_KEY_9;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r9.\w %s^n\r0.\w %s", _T("Back", id), _T("More", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n9. %s^n0. %s", _T("Back", id), _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && left_entries(page, g_flagtimesnum, 7))
+	{
+		keys |= MENU_KEY_9;
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r9.\w %s^n\r0.\w %s", _T("More", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n9. %s^n0. %s", _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && !left_entries(page, g_flagtimesnum, 7))
+	{
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r0.\w %s", _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n0. %s", _T("Exit", id));
+	}
+	show_menu(id, keys, menu, -1, "menu_flagtime");
+	return PLUGIN_HANDLED
+}
+public actionFlagtimeMenu(id,key)
+{
+	if(key == 9)
+		return PLUGIN_HANDLED;
+		
+	else if(key == 8)
+	{
+		cmdFlagtimeMenu(id, ++g_iPage[id]);
+		return PLUGIN_HANDLED;
+	}
+	else if(key == 7)
+	{
+		cmdFlagtimeMenu(id, --g_iPage[id]);
+		return PLUGIN_HANDLED;
+	}
 	
-	new aid=str_to_num(szInfo)
+	g_choiceTime[id]=g_FlagMenuValues[g_iPage[id]*7+key];
 	
-	if(aid == 99) {
-		if(amxbans_get_static_bantime(id)) g_choiceTime[id]=get_pcvar_num(pcvar_custom_statictime)
+	if(get_cvarptr_num(pcvar_debug) >= 2)
+		log_amx("[AMXBans FlagtimeMenu %d] %d choice: %d min",g_hFlagtimeMenu,id,g_choiceTime[id])
+	
+	g_iPage[id] = 0;
+	cmdFlagReasonMenu(id, 0)
+	
+	return PLUGIN_HANDLED
+}
+public cmdFlagReasonMenu(id, page)
+{
+	new iLen, b, keys = MENU_KEY_0, szDisplay[128], szTime[64];
+	new custom_static_time = get_cvarptr_num(pcvar_custom_statictime)
+	
+	if(g_coloredMenus)
+		iLen += formatex(menu, charsmax(menu), "\r%s\w^n^n", _T("Flagging-Reason Menu",id));
+	else
+		iLen += formatex(menu, charsmax(menu), "%s^n^n", _T("Flagging-Reason Menu",id));
+	
+	for(new i=page*7;i < next_page(page, g_iLoadedReasons, 7)*7;i++)
+	{
+		if(!i)
+		{
+			if(custom_static_time >= 0)
+			{
+				keys |= (1<<b);
+				b++;
+				
+				if(g_coloredMenus)
+					formatex(szDisplay, charsmax(szDisplay), "\r%d.\w %s^n", b, _T("Userdefined reason",id))
+				else
+					formatex(szDisplay, charsmax(szDisplay), "%d. %s^n", b, _T("Userdefined reason",id))
+					
+				if(g_iAdminUseStaticBantime[id])
+				{
+					get_bantime_string(id,custom_static_time,szTime,charsmax(szTime))
+					format(szDisplay,charsmax(szDisplay),"%s (%s)",szDisplay,szTime)
+				}
+				iLen += formatex(menu[iLen], charsmax(menu)-iLen, szDisplay);
+			}
+		}
+		else
+		{
+			keys |= (1<<b);
+			b++;
+			
+			if(g_coloredMenus)
+				formatex(szDisplay, charsmax(szDisplay), "\r%d.\w %s^n", b, g_banReasons[i]);
+			else
+				formatex(szDisplay, charsmax(szDisplay), "%d. %s^n", b, g_banReasons[i]);
+				
+			if(g_iAdminUseStaticBantime[id])
+			{
+				get_bantime_string(id,g_banReasons_Bantime[i],szTime,charsmax(szTime))
+				format(szDisplay,charsmax(szDisplay),"%s (%s)",szDisplay,szTime)
+			}
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, szDisplay);
+		}
+	}
+	if(is_lastpage(page, g_iLoadedReasons, 7) && !is_firstpage(page))
+	{
+		keys |= MENU_KEY_8;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r0.\w %s", _T("Back", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n0. %s", _T("Back", id), _T("Exit", id));
+	}
+	else if(!is_firstpage(page))
+	{
+		keys |= MENU_KEY_8|MENU_KEY_9;
+		
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r8.\w %s^n\r9.\w %s^n\r0.\w %s", _T("Back", id), _T("More", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n8. %s^n9. %s^n0. %s", _T("Back", id), _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && left_entries(page, g_iLoadedReasons, 7))
+	{
+		keys |= MENU_KEY_9;
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r9.\w %s^n\r0.\w %s", _T("More", id), _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n9. %s^n0. %s", _T("More", id), _T("Exit", id));
+	}
+	else if(is_firstpage(page) && !left_entries(page, g_iLoadedReasons, 7))
+	{
+		if(g_coloredMenus)
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n\r0.\w %s", _T("Exit", id));
+		else
+			iLen += formatex(menu[iLen], charsmax(menu)-iLen, "^n0. %s", _T("Exit", id));
+	}
+	show_menu(id, keys, menu, -1, "menu_flagreason");
+	return PLUGIN_HANDLED
+}
+public actionFlagReasonMenu(id,key)
+{
+	if(key == 9)
+		return PLUGIN_HANDLED;
+	else if(key == 8)
+	{
+		cmdFlagReasonMenu(id, ++g_iPage[id]);
+		return PLUGIN_HANDLED;
+	}
+	else if(key == 7)
+	{
+		cmdFlagReasonMenu(id, --g_iPage[id]);
+		return PLUGIN_HANDLED;
+	}
+	
+	if(is_firstpage(g_iPage[id]) && !key)
+	{
+		if(g_iAdminUseStaticBantime[id]) g_choiceTime[id]=get_cvarptr_num(pcvar_custom_statictime)
 		g_in_flagging[id]=true
 		set_custom_reason[id]=true
 		client_cmd(id,"messagemode amxbans_custombanreason")
-		menu_destroy(menu)
 		return PLUGIN_HANDLED
-	} else {
-		ArrayGetString(g_banReasons,aid,g_choiceReason[id],charsmax(g_choiceReason[]))
-		if(amxbans_get_static_bantime(id)) g_choiceTime[id]=ArrayGetCell(g_banReasons_Bantime,aid)
+	}
+	else
+	{
+		new aid = g_iPage[id]*7+key;
+		copy(g_choiceReason[id],charsmax(g_choiceReason[]), g_banReasons[aid])
+		if(g_iAdminUseStaticBantime[id]) g_choiceTime[id]=g_banReasons_Bantime[aid]
 	}
 	
-	if(get_pcvar_num(pcvar_debug) >= 2)
-		log_amx("[AMXBans FlagReasonMenu %d] %d choice: %s (%d min)",menu,id,g_choiceReason[id],g_choiceTime[id])
+	if(get_cvarptr_num(pcvar_debug) >= 2)
+		log_amx("[AMXBans FlagReasonMenu %d] %d choice: %s (%d min)",g_hFlagReasonMenu,id,g_choiceReason[id],g_choiceTime[id])
 	
 	FlagPlayer(id)
-	
-	menu_destroy(menu)
 	return PLUGIN_HANDLED
 }
 /*******************************************************************************************************************/
-FlagPlayer(id) {
-	if(get_pcvar_num(pcvar_debug) >= 2)
+FlagPlayer(id)
+{
+	if(get_cvarptr_num(pcvar_debug) >= 2)
 		log_amx("[AMXBans FlagPlayer %d] %d | %s | %s | %s | %s | %d min ",id,\
 			g_choicePlayerId[id],g_choicePlayerName[id],g_choicePlayerAuthid[id],g_choicePlayerIp[id],\
 			g_choiceReason[id],g_choiceTime[id])
@@ -189,89 +455,71 @@ FlagPlayer(id) {
 	
 	mysql_escape_string(g_choicePlayerName[id],pname,charsmax(pname))
 	
-	new pquery[1024]
-	
-	formatex(pquery, charsmax(pquery), "INSERT INTO `%s%s` (`player_ip`,`player_id`,`player_nick`,\
+	mysql_query(g_SqlX, "INSERT INTO `%s%s` (`player_ip`,`player_id`,`player_nick`,\
 		`admin_ip`,`admin_id`,`admin_nick`,`reason`,`created`,`length`,`server_ip`) VALUES \
 		('%s','%s','%s','%s','%s','%s','%s',UNIX_TIMESTAMP(NOW()),'%d','%s:%s')",g_dbPrefix, tbl_flagged, \
 		g_choicePlayerIp[id],g_choicePlayerAuthid[id],pname,aip,aauthid,anick,\
 		g_choiceReason[id],g_choiceTime[id],g_ip,g_port)
 	
-	new data[2]
-	data[0] = id
-	SQL_ThreadQuery(g_SqlX, "_FlagPlayer", pquery, data, 1)
-	
 	g_in_flagging[id]=false
+	
+	_FlagPlayer(id);
 	
 	return PLUGIN_HANDLED
 	
 }
-UnflagPlayer(id,announce=0) {
-	if(get_pcvar_num(pcvar_debug) >= 2)
+UnflagPlayer(id,announce=0)
+{
+	if(get_cvarptr_num(pcvar_debug) >= 2)
 		log_amx("[AMXBans UnflagPlayer %d] %d | %s",id,g_choicePlayerId[id],g_choicePlayerName[id])
-	
-	new pquery[1024]
 	
 	formatex(pquery, charsmax(pquery), "DELETE FROM `%s%s` WHERE `player_id`='%s' OR `player_ip`='%s'",g_dbPrefix, tbl_flagged, \
 		g_choicePlayerAuthid[id],g_choicePlayerIp[id])
 	
-	if(!get_pcvar_num(pcvar_flagged_all))
+	if(!get_cvarptr_num(pcvar_flagged_all))
 		format(pquery, charsmax(pquery),"%s AND `server_ip`='%s:%s'",pquery,g_ip,g_port)
 	
-	
-	new data[2]
-	data[0] = id
-	data[1] = announce
-	SQL_ThreadQuery(g_SqlX, "_UnflagPlayer", pquery, data, 2)
+	mysql_query(g_SqlX, pquery)
 	
 	g_in_flagging[id]=false
+	
+	_UnflagPlayer(id, announce);
 	
 	return PLUGIN_HANDLED
 }
 /*******************************************************************************************************************/
-public _FlagPlayer(failstate, Handle:query, error[], errnum, data[], size) {
-	new id=data[0]
-	
-	if (failstate) {
-		client_print(id,print_chat,"[AMXBans] %L",data[0],"FLAGG_MESS_ERROR",g_choicePlayerName[id])
-		new szQuery[256]
-		MySqlX_ThreadError( szQuery, error, errnum, failstate, 31 )
-		return PLUGIN_HANDLED
-	}
-	
-	if(SQL_AffectedRows(query)) {
-		client_print(id,print_chat,"[AMXBans] %L",data[0],"FLAGG_MESS",g_choicePlayerName[id])
+public _FlagPlayer(id)
+{
+	if(mysql_affected_rows(g_SqlX))
+	{
+		client_print(id,print_chat,_T("[AMXBans] You have flagged player %s",id),g_choicePlayerName[id])
 		g_being_flagged[g_choicePlayerId[id]]=true
 		g_flaggedTime[g_choicePlayerId[id]]=g_choiceTime[id]
 		copy(g_flaggedReason[g_choicePlayerId[id]],charsmax(g_flaggedReason[]),g_choiceReason[id])
 		
-		new ret
-		ExecuteForward(MFHandle[Player_Flagged],ret,g_choicePlayerId[id],(g_choiceTime[id]*60),g_choiceReason[id])
-	} else { 
-		client_print(id,print_chat,"[AMXBans] %L",data[0],"FLAGG_MESS_ERROR",g_choicePlayerName[id])
+		amxbans_player_flagged(g_choicePlayerId[id], (g_choiceTime[id]*60), g_choiceReason[id]);
+	}
+	else
+	{ 
+		client_print(id,print_chat,_T("[AMXBans] Flagging of player %s failed",id),g_choicePlayerName[id])
 		g_being_flagged[g_choicePlayerId[id]]=false
 	}
 	return PLUGIN_HANDLED
 }
-public _UnflagPlayer(failstate, Handle:query, error[], errnum, data[], size) {
-	new id=data[0]
-	
-	if (failstate) {
-		client_print(id,print_chat,"[AMXBans] %L",data[0],"UN_FLAGG_MESS_ERROR",g_choicePlayerName[id])
-		new szQuery[256]
-		MySqlX_ThreadError( szQuery, error, errnum, failstate, 31 )
-		return PLUGIN_HANDLED
-	}
-	
-	if(SQL_AffectedRows(query)) {
-		if(data[1]) {
-			client_print(id,print_chat,"[AMXBans] %L",id,"UN_FLAGG_MESS",g_choicePlayerName[id])
+public _UnflagPlayer(id, announce)
+{
+	if(mysql_affected_rows(g_SqlX))
+	{
+		if(announce)
+		{
+			client_print(id,print_chat,_T("[AMXBans] You removed the flag of player %s",id),g_choicePlayerName[id])
 		}
 		g_being_flagged[g_choicePlayerId[id]]=false
-		new ret
-		ExecuteForward(MFHandle[Player_UnFlagged],ret,g_choicePlayerId[id])
-	} else { 
-		client_print(id,print_chat,"[AMXBans] %L",data[0],"UN_FLAGG_MESS_ERROR",g_choicePlayerName[id])
+		amxbans_player_unflagged(g_choicePlayerId[id]);
+	}
+	else
+	{ 
+		client_print(id,print_chat,_T("[AMXBans] Flag removing from player %s failed",id),g_choicePlayerName[id])
 	}
 	return PLUGIN_HANDLED
 }

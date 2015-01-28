@@ -205,7 +205,7 @@ $smarty->assign("bbcodes",$bbcodes);
 $smarty->assign("menu",$menu);
 $smarty->assign("banner",$config->banner);
 $smarty->assign("banner_url",$config->banner_url);
-$smarty->assign("pagenav", construct_vb_page_nav($ban_page['current'], $ban_page['max_page'], 3, array(10, 50, 100, 500, 1000)));
+$smarty->assign("pagenav", construct_vb_page_nav($ban_page->current, $ban_page->max_page, 3, array(10, 50, 100, 500, 1000)));
 $smarty->display('main_header.tpl');
 //load main page, currently ban list or ban details/edit
 if($user_site !== "") {
