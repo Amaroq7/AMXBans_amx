@@ -52,7 +52,7 @@
 	
 	//Startseiten suchen
 	//$start_pages[""]="---";
-	$vorbidden=array("index.php","login.php","logout.php","admin.php","search.php","setup.php","motd.php");
+	$vorbidden=["index.php","login.php","logout.php","admin.php","search.php","setup.php","motd.php"];
 	$d=opendir($config->path_root."/");
 	while($f=readdir($d)) {
 		if($f=="." || $f==".." || is_dir($config->path_root."/".$f)) continue;
@@ -64,13 +64,13 @@
 	
 	//Settings speichern
 	if(isset($_POST["save"]) && $_SESSION["loggedin"]) {
-		$update_query="`cookie`='".mysql_real_escape_string($_POST["cookie"])."'";
-		$update_query.=",`design`='".(mysql_real_escape_string($_POST["design"])=="---" ? "":mysql_real_escape_string($_POST["design"]))."'";
+		$update_query="`cookie`='".$mysql->escape_string($_POST["cookie"])."'";
+		$update_query.=",`design`='".($mysql->escape_string($_POST["design"])=="---" ? "":$mysql->escape_string($_POST["design"]))."'";
 		$update_query.=",`bans_per_page`=".((is_numeric($_POST["bans_per_page"]) && $_POST["bans_per_page"] > 1)?(int)$_POST["bans_per_page"]:10);
-		$update_query.=",`banner`='".(mysql_real_escape_string($_POST["banner"])=="---" ? "":mysql_real_escape_string($_POST["banner"]))."'";
-		$update_query.=",`banner_url`='".mysql_real_escape_string(trim($_POST["banner_url"]))."'";
-		$update_query.=",`default_lang`='".mysql_real_escape_string($_POST["language"])."'";
-		$update_query.=",`start_page`='".mysql_real_escape_string($_POST["start_page"])."'";
+		$update_query.=",`banner`='".($mysql->escape_string($_POST["banner"])=="---" ? "":$mysql->escape_string($_POST["banner"]))."'";
+		$update_query.=",`banner_url`='".$mysql->escape_string(trim($_POST["banner_url"]))."'";
+		$update_query.=",`default_lang`='".$mysql->escape_string($_POST["language"])."'";
+		$update_query.=",`start_page`='".$mysql->escape_string($_POST["start_page"])."'";
 		$update_query.=",`show_comment_count`=".(int)$_POST["show_comment_count"];
 		$update_query.=",`show_demo_count`=".(int)$_POST["show_demo_count"];
 		$update_query.=",`show_kick_count`=".(int)$_POST["show_kick_count"];
@@ -81,24 +81,24 @@
 		$update_query.=",`use_capture`=".(int)$_POST["use_capture"];
 		$update_query.=",`auto_prune`=".(int)$_POST["auto_prune"];
 		$update_query.=",`max_offences`=".((is_numeric($_POST["max_offences"]) && $_POST["max_offences"] > 1)?(int)$_POST["max_offences"]:10);
-		$update_query.=",`max_offences_reason`='".(mysql_real_escape_string($_POST["max_offences_reason"])=="" ? "max offences reached":mysql_real_escape_string($_POST["max_offences_reason"]))."'";
+		$update_query.=",`max_offences_reason`='".($mysql->escape_string($_POST["max_offences_reason"])=="" ? "max offences reached":$mysql->escape_string($_POST["max_offences_reason"]))."'";
 		$update_query.=",`max_file_size`=".(int)$_POST["max_file_size"];
-		$update_query.=",`file_type`='".(mysql_real_escape_string($_POST["file_type"]))."'";
+		$update_query.=",`file_type`='".($mysql->escape_string($_POST["file_type"]))."'";
 		
 		//save it to db
-		$query = mysql_query("UPDATE `".$config->db_prefix."_webconfig` SET ".$update_query." WHERE `id`=1 LIMIT 1") or die (mysql_error());
+		mysql_query("UPDATE `".$config->db_prefix."_webconfig` SET ".$update_query." WHERE `id`=1 LIMIT 1") or die ($mysql->error);
 		$user_msg="_CONFIGSAVED";
 		log_to_db("Websetting config","Changed");
 		
 		//set language
-		$_SESSION["lang"]=mysql_real_escape_string($_POST["language"]);
+		$_SESSION["lang"]=$mysql->escape_string($_POST["language"]);
 	}
 	
 	//get and set websettings
 	$vars=sql_set_websettings();
 	
-	$smarty->assign("yesno_select",array("_YES","_NO"));
-	$smarty->assign("yesno_values",array(1,0));
+	$smarty->assign("yesno_select",["_YES","_NO"]);
+	$smarty->assign("yesno_values",[1,0]);
 	$smarty->assign("vars",$vars);
 	$smarty->assign("designs",$designs);
 	$smarty->assign("banners",$banners);

@@ -37,8 +37,8 @@
 	
 	//get servers
 	$servers_array = array();
-	$resource = mysql_query("SELECT * FROM ".$config->db_prefix."_serverinfo ORDER BY hostname ASC") or die (mysql_error());
-	while($result = mysql_fetch_object($resource)) {
+	$resource = $mysql->query("SELECT * FROM ".$config->db_prefix."_serverinfo ORDER BY hostname ASC") or die ($mysql->error);
+	while($result = $resource->fetch_object()) {
 		$servers_list[] = $result->id;
 		$key = array_keys($servers_list);
 		$count = count($key);
@@ -50,7 +50,7 @@
 		$infos = $server->Info();
 		$server->Disconnect();
 		for ($i=0; $i<$count; $i++) {
-			$servers_info = array(
+			$servers_info = [
 				"id"		=> $key[$i],
 				"hostname"	=> $result->hostname,
 				"address"	=> $result->address,
@@ -61,10 +61,11 @@
 				"cur_players"	=> $infos[activeplayers], 
 				"max_players"	=> $infos[maxplayers],
 				"bot_players"	=> $infos[botplayers]
-			);
+			];
 		}
 		$servers_array[] = $servers_info;
 	}
+	$resource->close();
 	//address for $sid exists?
 	if(!isset($servers_array[$sid]["address"])) $sid=0;
 	$hostname=$servers_array[$sid]["hostname"];
@@ -77,8 +78,8 @@
 	$smarty->assign("reasons",$reasons);
 	
 	//set bantypes
-	$banby_output=array("Steamid","Steamid & IP");
-	$banby_values=array("S","SI");
+	$banby_output=["Steamid","Steamid & IP"];
+	$banby_values=["S","SI"];
 	$smarty->assign("banby_output",$banby_output);
 	$smarty->assign("banby_values",$banby_values);
 	
@@ -114,11 +115,11 @@
 		if($pl_silent) {
 			//if banning silent, only add the ban to the db
 			if(!$user_msg) {
-				$query = mysql_query("INSERT INTO `".$config->db_prefix."_bans` 
+				$mysql->query("INSERT INTO `".$config->db_prefix."_bans` 
 						(`player_ip`,`player_id`,`player_nick`,`admin_nick`,`admin_id`,`ban_type`,`ban_reason`,`ban_created`,`ban_length`,`server_name`) 
 						VALUES 
 						('".$pl_ip."','".$pl_steamid."','".$pl_name."','".$_SESSION["uname"]."','".$_SESSION["uname"]."','".$type."','".$pl_reason."',UNIX_TIMESTAMP(),'".$pl_ban_length."','website')
-						") or die (mysql_error());
+						") or die ($mysql->error);
 				$user_msg='_BANADDSUCCESS';
 				log_to_db("Add ban online","nick: ".$pl_name." <".$pl_steamid."><".$pl_ip."> banned for ".$pl_ban_length." minutes");	
 			}
@@ -189,7 +190,7 @@
 							default:
 								$statusname="_UNKNOWN";break;
 						}
-						$player=array(
+						$player=[
 							"name"=>htmlspecialchars($pl[0]),
 							"userid"=>$pl[1],
 							"steamid"=>$pl[2],
@@ -199,7 +200,7 @@
 							"statusname"=>$statusname,
 							"cc"=>$cc,
 							"cn"=>$cn
-							);
+							];
 						$count++;
 						$players[]=$player;
 					}

@@ -34,51 +34,54 @@ $update_db="amxbans_version";
 
 
 //get version from servers
-$query=mysql_query("SELECT `address`,`amxban_version` FROM `".$config->db_prefix."_serverinfo` ORDER BY `address`") or die(mysql_error());
+$query=$mysql->query("SELECT `address`,`amxban_version` FROM `".$config->db_prefix."_serverinfo` ORDER BY `address`") or die($mysql->error);
 $version_server=array();
-while($result = mysql_fetch_object($query)) {
-	$version=array(
+while($result = $query->fetch_object()) {
+	$version=[
 		"address"=>$result->address,
 		"version"=>$result->amxban_version
-	);
+	];
 	$version_server[]=$version;
 	$server_count++;
 }
+$query->close();
 $smarty->assign("server_count",$server_count);
 $smarty->assign("version_server",$version_server);
 
 
 //get versions from update db
-@$mysql_upd = mysql_connect($update_ip,$update_user,$update_pw) or $error[]="_UPD_CONNECT_ERROR";
+@$mysql_upd = new mysqli($update_ip,$update_user,$update_pw) or $error[]="_UPD_CONNECT_ERROR";
 if($mysql_upd) {
-	$resource = mysql_select_db($update_db,$mysql_upd) or $error[]="_UPD_DB_ERROR";
+	$resource = $mysql_upd->select_db($update_db) or $error[]="_UPD_DB_ERROR";
 	if(!$error) {	
 		//get newest web versions info
-		$query = mysql_query("SELECT * FROM `version` WHERE `for`='web' ORDER BY `release` DESC LIMIT 1",$mysql_upd) or $error[]="_UPD_SELECT_ERROR";
-		while($result = mysql_fetch_object($query)) {
-			$version=array(
+		$query = $mysql_upd->query("SELECT * FROM `version` WHERE `for`='web' ORDER BY `release` DESC LIMIT 1") or $error[]="_UPD_SELECT_ERROR";
+		while($result = $query->fetch_object()) {
+			$version=[
 				"release"=>$result->release,
 				"beta"=>$result->beta,
 				"recommended_to"=>$result->recommended_to,
 				"changelog"=>$result->changelog,
 				"url"=>$result->url
-			);
+			];
 		}
+		$query->close();
 		$smarty->assign("version_db_web",$version);
 		//get newest plugin versions info
-		$query = mysql_query("SELECT * FROM `version` WHERE `for`='plugin' ORDER BY `release` DESC LIMIT 1",$mysql_upd) or $error[]="_UPD_SELECT_ERROR";
-		while($result = mysql_fetch_object($query)) {
-			$version=array(
+		$query = $mysql_upd->query("SELECT * FROM `version` WHERE `for`='plugin' ORDER BY `release` DESC LIMIT 1") or $error[]="_UPD_SELECT_ERROR";
+		while($result = $query->fetch_object()) {
+			$version=[
 				"release"=>$result->release,
 				"beta"=>$result->beta,
 				"recommended_to"=>$result->recommended_to,
 				"changelog"=>$result->changelog,
 				"url"=>$result->url
-			);
+			];
 		}
+		$query->close();
 		$smarty->assign("version_db_plugin",$version);
 	}
-	mysql_close($mysql_upd);
+	$mysql_upd->close();
 }
 $smarty->assign("error",$error);
 ?>

@@ -35,7 +35,7 @@
 		$use_static_bantime=$_POST["use_static_bantime"];
 		$user_id=$_POST["hid_uid"];
 		//delete all admins for this server
-		$query = mysql_query("DELETE FROM `".$config->db_prefix."_admins_servers` WHERE `server_id`=".$sid) or die (mysql_error());
+		$mysql->query("DELETE FROM `".$config->db_prefix."_admins_servers` WHERE `server_id`=".$sid) or die ($mysql->error);
 		//search for the new settings
 		if(is_array($aktiv)) {
 			foreach($aktiv as $k => $aid) {
@@ -44,11 +44,11 @@
 					$sban=sql_safe(trim($use_static_bantime[$k]));
 					$uid=sql_safe(trim($user_id[$k]));
 					//safe the admin to the db
-					$query = mysql_query("INSERT INTO `".$config->db_prefix."_admins_servers` 
+					$mysql->query("INSERT INTO `".$config->db_prefix."_admins_servers` 
 								(`admin_id`,`server_id`,`custom_flags`,`use_static_bantime`) 
 								VALUES 
 								('".(int)$uid."','".$sid."','".trim($cflags)."','".$sban."')
-								") or die (mysql_error());
+								") or die ($mysql->error);
 				}
 			}
 		}
@@ -57,7 +57,7 @@
 		log_to_db("Server Admin config","Edited admins on server: ".sql_safe($_POST["sidname"]));
 	}
 	if(isset($_POST["admins_edit"]) && $_SESSION["loggedin"]) {
-		$editadmins=array("sidname"=>html_safe($_POST["sidname"]),"sid"=>$sid);
+		$editadmins=["sidname"=>html_safe($_POST["sidname"]),"sid"=>$sid];
 		$smarty->assign("editadmins",$editadmins);
 		
 		$admins=sql_get_amxadmins_server($sid);
@@ -66,10 +66,10 @@
 	//Servers holen
 	$servers=sql_get_server();
 	
-	$delay_choose=array(1,2,5,10);
-	$yesno_choose=array("yes","no");
-	$yesno_output=array("_YES","_NO");
-	$onetwo_choose=array(1,0);
+	$delay_choose=[1,2,5,10];
+	$yesno_choose=["yes","no"];
+	$yesno_output=["_YES","_NO"];
+	$onetwo_choose=[1,0];
 	$smarty->assign("onetwo_choose",$onetwo_choose);
 	$smarty->assign("delay_choose",$delay_choose);
 	$smarty->assign("yesno_choose",$yesno_choose);

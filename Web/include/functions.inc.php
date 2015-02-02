@@ -79,7 +79,7 @@ function validate_value($value,$type = "name",&$msg = "",$minsize=1,$maxsize=31,
 }
 function sql_safe($value) {
 	if (get_magic_quotes_gpc()) $value=stripslashes_recursive($value); //function in config.inc.php
-	return mysql_real_escape_string($value);
+	return $mysql->escape_string($value);
 }
 function html_safe($value) {
 	if (get_magic_quotes_gpc()) $value=stripslashes_recursive($value); //function in config.inc.php

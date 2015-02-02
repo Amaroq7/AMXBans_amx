@@ -34,14 +34,14 @@ require_once("include/functions.inc.php");
 require_once("include/rcon_hl_net.inc");
 
 //fetch server_information
-$resource2	= mysql_query("SELECT * FROM ".$config->db_prefix."_serverinfo ORDER BY hostname ASC") or die (mysql_error());
+$resource2	= $mysql->query("SELECT * FROM ".$config->db_prefix."_serverinfo ORDER BY hostname ASC") or die ($mysql->query);
 
 $server_array = array();
 $addons_array = array();
 $rules_array = array();
 $anticheat_array = array();
 $rules = "";
-while($result2 = mysql_fetch_object($resource2)) {
+while($result2 = $resource2->fetch_object()) {
 
 	$split_address = explode (":", $result2->address);
 	$ip	= $split_address['0'];
@@ -60,7 +60,7 @@ while($result2 = mysql_fetch_object($resource2)) {
 			//copy rules to rules array for template
 			if(is_array($rules)) {
 				foreach($rules as $k => $v){
-					$rules_array[] =array("name"=>$k,"value"=>$v);
+					$rules_array[] =["name"=>$k,"value"=>$v];
 				}
 			}
 			//check if mappic exists
@@ -84,7 +84,7 @@ while($result2 = mysql_fetch_object($resource2)) {
 				if($rules[hlg_version]) $anticheat_array[]=array("name"=>"HLGuard","version"=>$rules[hlg_version],"url"=>"");
 			}
 			//main server info
-			$server_info = array(
+			$server_info = [
 				"sid"			=> $result2->id,
 				"type"			=> $infos[type],
 				"version"		=> $infos[version],
@@ -109,7 +109,7 @@ while($result2 = mysql_fetch_object($resource2)) {
 				"address"		=> $result2->address,
 				"mappic"		=> $mappic,
 				"players"		=> ""
-			);
+			];
 
 			//get the players
 			$player_array	= array();
@@ -118,11 +118,11 @@ while($result2 = mysql_fetch_object($resource2)) {
 				$player = $players[$i];
 				$player[name] = html_safe($player[name]);
 
-				$player_info = array(
+				$player_info = [
 					"name"		=> $player[name],
 					"frag"		=> $player[frag],
 					"time"		=> $player[time],
-					);
+					];
 
 				$player_array[] = $player_info;
 			}
@@ -130,7 +130,7 @@ while($result2 = mysql_fetch_object($resource2)) {
 			$server_info[players] = $player_array;
 			$server_array[] = $server_info;
 		} else {
-			$server_info = array(
+			$server_info = [
 				"sid"			=> $result2->id,
 				"type"			=> "",
 				"version"		=> "",
@@ -155,7 +155,7 @@ while($result2 = mysql_fetch_object($resource2)) {
 				"address"		=> $result2->address,
 				"mappic"		=> "noimage",
 				"players"		=> ""
-			);
+			];
 			$server_array[] = $server_info;
 		}
 		
@@ -163,25 +163,42 @@ while($result2 = mysql_fetch_object($resource2)) {
 		$server->Disconnect();
 	}
 }
+$resource2->close();
 /*
  *
  * 		Stats
  *
  */
-$stats['total']		= mysql_num_rows( mysql_query("SELECT bid FROM ".$config->db_prefix."_bans") ); 
-$stats['permanent']	= mysql_num_rows( mysql_query("SELECT bid FROM ".$config->db_prefix."_bans WHERE ban_length = 0") ); 
-$stats['active']	= mysql_num_rows( mysql_query("SELECT bid FROM ".$config->db_prefix."_bans WHERE ((ban_created+(ban_length*60)) > ".time()." OR ban_length = 0)") );
+$total_query = $mysql->query("SELECT bid FROM ".$config->db_prefix."_bans");
+$stats['total']		= $total_query->num_rows;
+
+$perm_query = $mysql->query("SELECT bid FROM ".$config->db_prefix."_bans WHERE ban_length = 0");
+$stats['permanent']	= $perm_query->num_rows;
+
+$act_query = $mysql->query("SELECT bid FROM ".$config->db_prefix."_bans WHERE ((ban_created+(ban_length*60)) > ".time()." OR ban_length = 0)");
+$stats['active']	= $act_query->num_rows;
+
 $stats['temp']		= $stats['active'] - $stats['permanent'];
-$stats['admins']	= mysql_num_rows( mysql_query("SELECT id FROM ".$config->db_prefix."_amxadmins") );
-$stats['servers']	= mysql_num_rows( mysql_query("SELECT id FROM ".$config->db_prefix."_serverinfo") );
+
+$admins_query = $mysql->query("SELECT id FROM ".$config->db_prefix."_amxadmins");
+$stats['admins']	= $admins_query->num_rows;
+
+$servers_query = $mysql->query("SELECT id FROM ".$config->db_prefix."_serverinfo");
+$stats['servers']	= $servers_query->num_rows;
+
+$total_query->close();
+$perm_query->close();
+$act_query->close();
+$admins_query->close();
+$servers_query->close();
 /*
  *
  * 		Latest Ban
  *
  */
 $last_ban_arr = "";
-$latest_ban		= mysql_query("SELECT player_id, player_nick, ban_reason, ban_created, ban_length, ban_type FROM ".$config->db_prefix."_bans ORDER BY ban_created DESC LIMIT 1") or die (mysql_error());
-while($lb = mysql_fetch_object($latest_ban)) {
+$latest_ban		= $mysql->query("SELECT player_id, player_nick, ban_reason, ban_created, ban_length, ban_type FROM ".$config->db_prefix."_bans ORDER BY ban_created DESC LIMIT 1") or die ($mysql->error);
+while($lb = $latest_ban->fetch_object()) {
 	if($lb->ban_length == 0) {
 		$ban_length	= 0;
 	} else {
@@ -193,13 +210,14 @@ while($lb = mysql_fetch_object($latest_ban)) {
 		$steamid	= $lb->player_id;
 	}
 
-	$last_ban_arr		= array("steamid"	=> $steamid,
+	$last_ban_arr		= ["steamid"	=> $steamid,
 					"nickname"	=> html_safe(_substr($lb->player_nick, 15)),
 					"reason"	=> html_safe(_substr($lb->ban_reason, 15)),
 					"created"	=> $lb->ban_created,
 					"length"	=> $ban_length,
-					"time"		=> time());
+					"time"		=> time()];
 }
+$latest_ban->close();
 /*
  *
  * 		Template parsing

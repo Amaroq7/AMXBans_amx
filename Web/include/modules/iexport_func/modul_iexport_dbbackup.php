@@ -32,11 +32,12 @@ function db_backup($structur,$droptable,$deleteall,$download,$bansonly) {
 		$datei .= "\n\n"; 
 		// Alle Tabellen der Datenbank in einem Array speichern
 		if(!$bansonly) {
-			$res = mysql_list_tables($config->db_db);
-			$num = mysql_num_rows($res); 
-			for($i=0; $i<$num; $i++) {
-				$tables[] = mysql_tablename($res, $i);
+			$res = $mysql->query("SHOW TABLES FROM ".$config->db_db);
+			for($i=0; $i<$res->num_rows; $i++) {
+				$info = $res->fetch_field_direct($i);
+				$tables[] = $info->table;
 			}
+			$res->close();
 		} else {
 		// nur banns table
 			$tables[]=$config->db_prefix."_bans";
@@ -54,10 +55,10 @@ function db_backup($structur,$droptable,$deleteall,$download,$bansonly) {
 			// Grundlegende Informationen über die Struktur sammeln 
 			$datei .= "CREATE TABLE IF NOT EXISTS `" . $tab . "` (\n"; 
 			$query = "DESCRIBE " . $tab; 
-			$sql = mysql_query($query); 
-			$num = mysql_num_rows($sql); 
+			$sql = $mysql->query($query); 
+			$num = $sql->num_rows; 
 			$end = 0; 
-			while($info = mysql_fetch_array($sql)) { 
+			while($info = $sql->fetch_array(MYSQLI_BOTH)) { 
 				$tab_name = $info["Field"]; 
 				$tab_type = $info["Type"]; 
 				$tab_null = (empty($info["Null"])) ? " NOT NULL" : " NULL"; 
@@ -69,11 +70,12 @@ function db_backup($structur,$droptable,$deleteall,$download,$bansonly) {
 				// Ergebnisse zu $datei hinzufügen 
 				$datei .= " `" . $tab_name . "` " . $tab_type . $tab_null . $tab_default . $tab_extra . $tab_komma; 
 			} 
-			unset($keyarray); 
+			unset($keyarray);
+			$sql->close();
 			// Weiter Informationen abfragen 
 			$query = "SHOW KEYS FROM " . $tab; 
-			$sql = mysql_query($query); 
-			while($info = mysql_fetch_array($sql)) { 
+			$sql = $mysql->query($query); 
+			while($info = $sql->fetch_array(MYSQLI_BOTH)) { 
 				$keyname = $info["Key_name"]; 
 				$comment = (isset($info["Comment"])) ? $info["Comment"] : ""; 
 				$sub_part = (isset($info["Sub_part"])) ? $info["Sub_part"] : ""; 
@@ -88,7 +90,8 @@ function db_backup($structur,$droptable,$deleteall,$download,$bansonly) {
 					$keyarray[$keyname] = array(); 
 				} 
 				$keyarray[$keyname][] = ($sub_part > 1) ? $info["Column_name"] . "(" . $sub_part . ")" : $info["Column_name"]; 
-			} 
+			}
+			$sql->close();
 			// Informationen verarbeiten und in $datei schreiben 
 			if(is_array($keyarray)) { 
 				foreach($keyarray as $keyname => $columns) { 
@@ -115,8 +118,8 @@ function db_backup($structur,$droptable,$deleteall,$download,$bansonly) {
 				} 
 				// Alle Daten der Tabelle auslesen 
 				$query = "SELECT * FROM `" . $tab ."`"; 
-				$sql = mysql_query($query); 
-				while($info = mysql_fetch_assoc($sql)) { 
+				$sql = $mysql->query($query); 
+				while($info = $sql->fetch_assoc()) { 
 					unset($values); 
 					unset($fieldnames); 
 					foreach($info as $name => $field) { 
@@ -125,7 +128,8 @@ function db_backup($structur,$droptable,$deleteall,$download,$bansonly) {
 					} 
 					// Formatierten String zu $datei hinzufügen 
 					$datei .= "INSERT INTO `" . $tab . "` (" . $fieldnames . ") VALUES (" . $values . ");\n"; 
-				} 
+				}
+				$sql->close();
 				$datei .= "\n\n"; 
 			} 
 		} 

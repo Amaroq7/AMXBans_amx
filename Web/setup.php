@@ -107,7 +107,7 @@ if($sitenr==1) {
 
 /////////////// site 2 server settings /////////////////
 if($sitenr==2) {
-	$php_settings=array(
+	$php_settings=[
 			"display_errors"=>(ini_get('display_errors')=="")?"off":ini_get('display_errors'),
 			"register_globals"=>(ini_get('register_globals')==1 || ini_get('register_globals')=="on")?"_ON":"_OFF",
 			"magic_quotes_gpc"=>(get_magic_quotes_gpc()==true)?"_ON":"_OFF", #(ini_get('magic_quotes_gpc')=="0")?"off":"on",
@@ -121,7 +121,7 @@ if($sitenr==2) {
 			"mysql_version"=>mysql_get_client_info(),
 			"bcmath"=>(extension_loaded('bcmath')=="1")?"_YES":"_NO",
 			"gmp"=>(extension_loaded('gmp')=="1")?"_YES":"_NO"
-		);
+		];
 	$smarty->assign("next",true);
 	$smarty->assign("checkvalue","_REFRESH");
 	$smarty->assign("php_settings",$php_settings);
@@ -138,7 +138,7 @@ if($sitenr==3) {
 	$templates_c_dir=is__writable($config->path_root."/include/smarty/templates_c/");
 	$setupphp=is__writable($config->path_root."/");
 	
-	$dirs=array(
+	$dirs=[
 		"document_root" => $config->document_root,
 		"path_root"		=> $config->path_root,
 		"include" 		=> $include_dir,
@@ -147,7 +147,7 @@ if($sitenr==3) {
 		"temp" 			=> $temp_dir,
 		"templates_c" 	=> $templates_c_dir,
 		"setupphp"		=> $setupphp
-		);
+		];
 	if($include_dir && $files_dir && $temp_dir && $templates_c_dir && $backup_dir) $smarty->assign("next",true);
 	$smarty->assign("checkvalue","_RECHECK");
 	$smarty->assign("dirs",$dirs);
@@ -168,27 +168,28 @@ if($sitenr==4 && isset($_POST["check4"])) {
 	$_SESSION["dbdb"]=$dbdb;
 	$_SESSION["dbprefix"]=$dbprefix;
 	
-	$smarty->assign("db",array($dbhost,$dbuser,$dbpass,$dbdb,$dbprefix));
+	$smarty->assign("db",[$dbhost,$dbuser,$dbpass,$dbdb,$dbprefix]);
 	
 	if($dbhost=="" || $dbuser=="" || $dbdb=="" || $dbprefix=="") {
 		$msg="_NOREQUIREDFIELDS";
 	}
 	
-	$mysql=@mysql_connect($dbhost,$dbuser,$dbpass) or $msg="_CANTCONNECT";
+	$mysql=new @mysqli($dbhost,$dbuser,$dbpass) or $msg="_CANTCONNECT";
 	if(!$msg) {
-		$enc = @mysql_query("SET CHARACTER SET 'utf-8'");
-		$enc = @mysql_query("SET NAMES 'utf8'");
-		$ressource=@mysql_select_db($dbdb) or $msg="_CANTSELECTDB";
+		$mysql->set_charset("urf8");
+		//$enc = @mysql_query("SET CHARACTER SET 'utf-8'");
+		//$enc = @mysql_query("SET NAMES 'utf8'");
+		$ressource=@$mysql->select_db($dbdb) or $msg="_CANTSELECTDB";
 	}
 	
 	//get user privileges
 	if(!$msg) {
 		$previleges=sql_get_privilege();
-		$prev[]=array("name"=>"SELECT","value"=>in_array("SELECT",$previleges));
-		$prev[]=array("name"=>"INSERT","value"=>in_array("INSERT",$previleges));
-		$prev[]=array("name"=>"UPDATE","value"=>in_array("UPDATE",$previleges));
-		$prev[]=array("name"=>"DELETE","value"=>in_array("DELETE",$previleges));
-		$prev[]=array("name"=>"CREATE","value"=>in_array("CREATE",$previleges));
+		$prev[]=["name"=>"SELECT","value"=>in_array("SELECT",$previleges)];
+		$prev[]=["name"=>"INSERT","value"=>in_array("INSERT",$previleges)];
+		$prev[]=["name"=>"UPDATE","value"=>in_array("UPDATE",$previleges)];
+		$prev[]=["name"=>"DELETE","value"=>in_array("DELETE",$previleges)];
+		$prev[]=["name"=>"CREATE","value"=>in_array("CREATE",$previleges)];
 		//search for all needed previleges
 		foreach($prev as $k => $v) {
 			if(in_array(false,$v)) {$msg="_NOTALLPREVILEGES";break;}
@@ -196,15 +197,19 @@ if($sitenr==4 && isset($_POST["check4"])) {
 	}
 	//check for existing tables
 	if(!$msg) {
-		$ressource=@mysql_select_db($dbdb);
+		$ressource=@$mysql->select_db($dbdb);
 		//search for existing dbprefix
-		if( mysql_num_rows( @mysql_query("SHOW TABLES FROM `".$dbdb."` LIKE '".$dbprefix."\_%'"))) {
+		$query = @$mysql->query("SHOW TABLES FROM `".$dbdb."` LIKE '".$dbprefix."\_%'");
+		if($query->num_rows) {
 			$prefix_exists=true;
 			//search for field "imported" in bans table, added since 6.0
-			if( mysql_num_rows( @mysql_query("SHOW COLUMNS FROM `".$dbprefix."_bans` WHERE Field LIKE 'imported'"))) {
+			$query2 = @$mysqli->query("SHOW COLUMNS FROM `".$dbprefix."_bans` WHERE Field LIKE 'imported'");
+			if($query2->num_rows) {
 				$prefix_isnew=true;
 			}
+			$query2->close();
 		}
+		$query->close();
 	}
 	
 	$smarty->assign("prevs",$prev);
@@ -224,6 +229,7 @@ if($sitenr==4 && isset($_POST["check4"])) {
 			$smarty->assign("next",true);
 		}
 	}
+	$mysql->close();
 }
 if($sitenr==4) $smarty->assign("checkvalue","_DBCHECK");
 
@@ -276,27 +282,27 @@ if($sitenr==7 && $_SESSION["dbcheck"]==true && $_SESSION["admincheck"]==true && 
 		include("install/tables.inc");
 		//create db structure
 		foreach($table_create as $k => $v) {
-			$table=array("table"=>$k,"success"=>sql_create_table($k,$v));
+			$table=["table"=>$k,"success"=>sql_create_table($k,$v)];
 			$tables[]=$table;
 		}
 		//get default data
 		include("install/datas.inc");
 		//create default data
 		foreach($data_create as $k => $v) {
-			$data=array("data"=>$k,"success"=>sql_insert_data($k,$v));
+			$data=["data"=>$k,"success"=>sql_insert_data($k,$v)];
 			$datas[]=$data;
 		}
 		//create default websettings
-		$websettings_create=array("data"=>"_CREATEWEBSETTINGS","success"=>sql_insert_setting($websettings_query));
+		$websettings_create=["data"=>"_CREATEWEBSETTINGS","success"=>sql_insert_setting($websettings_query)];
 		//create default usermenu
-		$usermenu_create=array("data"=>"_CREATEUSERMENU","success"=>sql_insert_setting($usermenu_query));
+		$usermenu_create=["data"=>"_CREATEUSERMENU","success"=>sql_insert_setting($usermenu_query)];
 		//create webadmin userlevel
-		$webadmin_create[]=array("data"=>"_CREATEUSERLEVEL","success"=>sql_insert_setting($userlevel_query));
+		$webadmin_create[]=["data"=>"_CREATEUSERLEVEL","success"=>sql_insert_setting($userlevel_query)];
 		//create webadmin
-		$webadmin_create[]=array("data"=>"_CREATEWEBADMIN","success"=>sql_insert_setting($webadmin_query));
+		$webadmin_create[]=["data"=>"_CREATEWEBADMIN","success"=>sql_insert_setting($webadmin_query)];
 		//install default modules
 		foreach($modules_install as $k => $v) {
-			$modul=array("name"=>$k,"success"=>sql_insert_setting($v));
+			$modul=["name"=>$k,"success"=>sql_insert_setting($v)];
 			$modules[]=$modul;
 		}
 		

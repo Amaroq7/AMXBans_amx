@@ -34,8 +34,8 @@
 	function rcon_send($command,$sid,$max_response_pages=0) {
 		//get server info
 		global $config;
-		$resource = mysql_query("SELECT address,rcon FROM ".$config->db_prefix."_serverinfo WHERE id=".$sid) or die (mysql_error());
-		$result = mysql_fetch_object($resource);
+		$resource = $mysql->query("SELECT address,rcon FROM ".$config->db_prefix."_serverinfo WHERE id=".$sid) or die ($mysql->error);
+		$result = $resource->fetch_object();
 		if($result) {
 			$server_address=explode(":",trim($result->address));
 			$server_rcon=$result->rcon;
@@ -47,12 +47,13 @@
 					return trim($response);
 				} else return false;
 			}
-		} 
+		}
+		$resource->close();
 	}
 	//rcon commands
 	if((isset($_POST["rconcommand"]) || isset($_POST["rconuserstart_".$sid])) && $sid) {
 		//to restrict rcon commands add it to the array
-		$denied_cmds=array("rcon_password","_restart","quit","restart","changelevel");
+		$denied_cmds=["rcon_password","_restart","quit","restart","changelevel"];
 		//defines how much packages for response (max), 0 for only 1 packet
 		$max_response_pages=0;
 		//pre defined rcon commands
@@ -100,21 +101,21 @@
 	}
 	//save server settings
 	if(isset($_POST["save"]) && $_SESSION["loggedin"]) {
-		$query = mysql_query("UPDATE `".$config->db_prefix."_serverinfo` SET 
+		$mysql->query("UPDATE `".$config->db_prefix."_serverinfo` SET 
 					`rcon`='".sql_safe($_POST["rcon"])."',
 					`amxban_motd`='".sql_safe($_POST["amxban_motd"])."',
 					`motd_delay`='".(int)$_POST["motd_delay"]."',
 					`amxban_menu`='".(int)$_POST["amxban_menu"]."',
 					`reasons`='".(int)$_POST["reasons"]."',
 					`timezone_fixx`='".(int)$_POST["timezone_fixx"]."'
-					WHERE `id`=".$sid." LIMIT 1") or die (mysql_error());
+					WHERE `id`=".$sid." LIMIT 1") or die ($mysql->error);
 		$user_msg='_SERVERSAVED';
 		log_to_db("Server config","Edited server: ".html_safe($_POST["sidname"]));
 	}
 	//delete server from db
 	if(isset($_POST["del"]) && $_SESSION["loggedin"]) {
-		$query = mysql_query("DELETE FROM `".$config->db_prefix."_serverinfo` WHERE `id`=".$sid." LIMIT 1") or die (mysql_error());
-		$query = mysql_query("DELETE FROM `".$config->db_prefix."_admins_servers` WHERE `server_id`=".$sid) or die (mysql_error());
+		$mysql->query("DELETE FROM `".$config->db_prefix."_serverinfo` WHERE `id`=".$sid." LIMIT 1") or die ($mysql->error);
+		$mysql->query("DELETE FROM `".$config->db_prefix."_admins_servers` WHERE `server_id`=".$sid) or die ($mysql->error);
 		$user_msg='_SERVERDELETED';
 		log_to_db("Server config","Deleted server: ".html_safe($_POST["sidname"]));
 	}
@@ -123,20 +124,21 @@
 	$servers=sql_get_server();
 	
 	//get reason sets
-	$query = mysql_query("SELECT * FROM `".$config->db_prefix."_reasons_set` ORDER BY `setname` ASC") or die (mysql_error());
-	$reasons_values=array("");
-	$reasons_choose=array("");
-	while($result = mysql_fetch_object($query)) {
+	$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_reasons_set` ORDER BY `setname` ASC") or die ($mysql->error);
+	$reasons_values=[""];
+	$reasons_choose=[""];
+	while($result = $query->fetch_object()) {
 		$reasons_values[]=$result->id;
 		$reasons_choose[]=$result->setname;
 	}
-	$timezone_values=array(-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,11,12);
-	$timezone_output=array("-12","-11","-10","-9","-8","-7","-6","-5","-4","-3","-2","-1","0","+1","+2","+3","+4","+5","+6","+7","+8","+9","+10","+11","+12");
-	$delay_choose=array(2,3,4,5,7,10);
-	$menu_choose=array(0,1);
+	$query->close();
+	$timezone_values=[-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,11,12];
+	$timezone_output=["-12","-11","-10","-9","-8","-7","-6","-5","-4","-3","-2","-1","0","+1","+2","+3","+4","+5","+6","+7","+8","+9","+10","+11","+12"];
+	$delay_choose=[2,3,4,5,7,10];
+	$menu_choose=[0,1];
 	//pre defined rcon command aliase and lang keys
-	$rcon_cmds=array("reload","restart","status","plugins","modules","metalist");
-	$rcon_cmdkeys=array("_RCON_RELOADADMINS","_RCON_RESTARTMAP","_RCON_STATUS","_RCON_PLUGINS","_RCON_MODULES","_RCON_METALIST");
+	$rcon_cmds=["reload","restart","status","plugins","modules","metalist"];
+	$rcon_cmdkeys=["_RCON_RELOADADMINS","_RCON_RESTARTMAP","_RCON_STATUS","_RCON_PLUGINS","_RCON_MODULES","_RCON_METALIST"];
 	//try to get the motd url
 	$motd_url=$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"];
 	$motd_url="http://".str_replace(basename($motd_url),"motd.php?sid=%s&adm=%d&lang=%s",$motd_url);

@@ -41,9 +41,9 @@ if($cookie_tmp != "" && $_SESSION["loggedin"]==false) {
 		$sid = sql_safe($cook[0]);
 		if(!$_SESSION["lang"]) $_SESSION["lang"]=$cook[1];
 
-		$query = mysql_query("SELECT id,username,level,email FROM `".$config->db_prefix."_webadmins` WHERE logcode='".$sid."' LIMIT 1") or die (mysql_error());
-		if(mysql_num_rows($query)) {
-			while($result = mysql_fetch_object($query)) {
+		$query = $mysql->query("SELECT id,username,level,email FROM `".$config->db_prefix."_webadmins` WHERE logcode='".$sid."' LIMIT 1") or die ($mysql->error);
+		if($query->num_rows) {
+			while($result = $query->fetch_object()) {
 				$_SESSION["uid"]=$result->id;
 				$_SESSION["uname"]=$result->username;
 				$_SESSION["email"]=$result->email;
@@ -51,8 +51,8 @@ if($cookie_tmp != "" && $_SESSION["loggedin"]==false) {
 				$_SESSION["sid"]=session_id();
 				$_SESSION["loggedin"]=true;
 			}
-			$query = mysql_query("SELECT * FROM `".$config->db_prefix."_levels` WHERE level=".$_SESSION["level"]." LIMIT 1") or die (mysql_error());
-			while($result = mysql_fetch_object($query)) {
+			$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_levels` WHERE level=".$_SESSION["level"]." LIMIT 1") or die ($mysql->error);
+			while($result = $query->fetch_object()) {
 				$_SESSION['bans_add'] = $result->bans_add;
 				$_SESSION['bans_edit'] = $result->bans_edit;
 				$_SESSION['bans_delete'] = $result->bans_delete;
@@ -71,9 +71,10 @@ if($cookie_tmp != "" && $_SESSION["loggedin"]==false) {
 				$_SESSION['ip_view'] = $result->ip_view;
 			}
 		}
+		$query->close();
 }
 if($cookie_tmp != "" && $_SESSION["loggedin"]==true) {
-	$query = mysql_query("UPDATE `".$config->db_prefix."_webadmins` SET `last_action`=UNIX_TIMESTAMP() WHERE `id`=".$_SESSION["uid"]);
+	$mysql->query("UPDATE `".$config->db_prefix."_webadmins` SET `last_action`=UNIX_TIMESTAMP() WHERE `id`=".$_SESSION["uid"]);
 }				
 if(isset($_SESSION["sid"]) && $_SESSION["sid"] != session_id()) {
 	unset($_SESSION["uid"]);

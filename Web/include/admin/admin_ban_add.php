@@ -46,9 +46,9 @@
 		if($ban_length < 0) $ban_length=0;
 		
 		$ban_type=$_POST["ban_type"];
-		$name=mysql_real_escape_string(trim($_POST["name"]));
-		$steamid=mysql_real_escape_string(trim($_POST["steamid"]));
-		$ip=mysql_real_escape_string(trim($_POST["ip"]));
+		$name=$mysql->escape_string(trim($_POST["name"]));
+		$steamid=$mysql->escape_string(trim($_POST["steamid"]));
+		$ip=$mysql->escape_string(trim($_POST["ip"]));
 		
 		//validate the input
 		if($steamid) if(!preg_match("/^STEAM_0:(0|1):[0-9]{1,10}$/",$steamid)) $user_msg="_STEAMIDINVALID";
@@ -59,25 +59,26 @@
 		
 		//check if a activ ban exists
 		if(!$user_msg) {
-			$query = mysql_query("SELECT * FROM `".$config->db_prefix."_bans` WHERE "
+			$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_bans` WHERE "
 						.(($steamid)?"`player_id`='".$steamid."'":"").
 						(($steamid && $ip)?" AND ":"").
 						(($ip)?"`player_ip`='".$ip."'":"").
 						" AND `expired`=0");
-			if(mysql_num_rows($query)) $user_msg="_ACTIVBANEXISTS";
+			if($query->num_rows) $user_msg="_ACTIVBANEXISTS";
+			$query->close();
 		}
 		
 		//add the ban
 		if(!$user_msg) {
-			$query = mysql_query("INSERT INTO `".$config->db_prefix."_bans` 
+			$mysql->query("INSERT INTO `".$config->db_prefix."_bans` 
 					(`player_ip`,`player_id`,`player_nick`,`admin_nick`,`admin_id`,`ban_type`,`ban_reason`,`ban_created`,`ban_length`,`server_name`) 
 					VALUES 
 					('".$ip."','".$steamid."','".$name."','".$_SESSION["uname"]."','".$_SESSION["uname"]."','".$ban_type."','".$reason."',UNIX_TIMESTAMP(),'".$ban_length."','website')
-					") or die (mysql_error());
+					") or die ($mysql->error);
 			$user_msg='_BANADDSUCCESS';
 			log_to_db("Add ban","playernick: ".$name." / time: ".$ban_length);	
 		} else {
-			$inputs=array("name"=>$name,"steamid"=>$steamid,"ip"=>$ip,"reason"=>$reason,"reason_custom"=>$reason_custom,"length"=>$ban_length,"type"=>$ban_type);
+			$inputs=["name"=>$name,"steamid"=>$steamid,"ip"=>$ip,"reason"=>$reason,"reason_custom"=>$reason_custom,"length"=>$ban_length,"type"=>$ban_type];
 			$smarty->assign("inputs",$inputs);
 		}
 	}
@@ -86,8 +87,8 @@
 	$reasons=sql_get_reasons_list();
 	$smarty->assign("reasons",$reasons);
 	
-	$banby_output=array("Steamid","Steamid & IP");
-	$banby_values=array("S","SI");
+	$banby_output=["Steamid","Steamid & IP"];
+	$banby_values=["S","SI"];
 	$smarty->assign("banby_output",$banby_output);
 	$smarty->assign("banby_values",$banby_values);
 

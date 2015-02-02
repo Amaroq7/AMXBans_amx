@@ -22,7 +22,7 @@
 
 global $GEOIP_COUNTRY_CODE_TO_NUMBER, $GEOIP_COUNTRY_CODES, $GEOIP_COUNTRY_NAMES;
 
-$GEOIP_COUNTRY_CODE_TO_NUMBER = array(
+$GEOIP_COUNTRY_CODE_TO_NUMBER = [
 "" => 0, "AP" => 1, "EU" => 2, "AD" => 3, "AE" => 4, "AF" => 5, 
 "AG" => 6, "AI" => 7, "AL" => 8, "AM" => 9, "AN" => 10, "AO" => 11, 
 "AQ" => 12, "AR" => 13, "AS" => 14, "AT" => 15, "AU" => 16, "AW" => 17, 
@@ -65,8 +65,8 @@ $GEOIP_COUNTRY_CODE_TO_NUMBER = array(
 "VU" => 234, "WF" => 235, "WS" => 236, "YE" => 237, "YT" => 238, "YU" => 239, 
 "ZA" => 240, "ZM" => 241, "ZR" => 242, "ZW" => 243, "A1" => 244, "A2" => 245, 
 "O1" => 246
-);
-$GEOIP_COUNTRY_CODES = array(
+];
+$GEOIP_COUNTRY_CODES = [
 "", "AP", "EU", "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AN", "AO", "AQ",
 "AR", "AS", "AT", "AU", "AW", "AZ", "BA", "BB", "BD", "BE", "BF", "BG", "BH",
 "BI", "BJ", "BM", "BN", "BO", "BR", "BS", "BT", "BV", "BW", "BY", "BZ", "CA",
@@ -86,9 +86,9 @@ $GEOIP_COUNTRY_CODES = array(
 "TF", "TG", "TH", "TJ", "TK", "TM", "TN", "TO", "TP", "TR", "TT", "TV", "TW",
 "TZ", "UA", "UG", "UM", "US", "UY", "UZ", "VA", "VC", "VE", "VG", "VI", "VN",
 "VU", "WF", "WS", "YE", "YT", "YU", "ZA", "ZM", "ZR", "ZW", "A1", "A2", "O1"
-);
+];
 
-$GEOIP_COUNTRY_CODES3 = array (
+$GEOIP_COUNTRY_CODES3 = [
 "","AP","EU","AND","ARE","AFG","ATG","AIA","ALB","ARM","ANT","AGO","AQ","ARG",
 "ASM","AUT","AUS","ABW","AZE","BIH","BRB","BGD","BEL","BFA","BGR","BHR","BDI",
 "BEN","BMU","BRN","BOL","BRA","BHS","BTN","BV","BWA","BLR","BLZ","CAN","CC",
@@ -107,9 +107,9 @@ $GEOIP_COUNTRY_CODES3 = array (
 "SVK","SLE","SMR","SEN","SOM","SUR","STP","SLV","SYR","SWZ","TCA","TCD","TF",
 "TGO","THA","TJK","TKL","TLS","TKM","TUN","TON","TUR","TTO","TUV","TWN","TZA",
 "UKR","UGA","UM","USA","URY","UZB","VAT","VCT","VEN","VGB","VIR","VNM","VUT",
-"WLF","WSM","YEM","YT","YUG","ZAF","ZMB","ZR","ZWE","A1","A2","O1");
+"WLF","WSM","YEM","YT","YUG","ZAF","ZMB","ZR","ZWE","A1","A2","O1"];
 
-$GEOIP_COUNTRY_NAMES = array(
+$GEOIP_COUNTRY_NAMES = [
 "", "Asia/Pacific Region", "Europe", "Andorra", "United Arab Emirates",
 "Afghanistan", "Antigua and Barbuda", "Anguilla", "Albania", "Armenia",
 "Netherlands Antilles", "Angola", "Antarctica", "Argentina", "American Samoa",
@@ -160,7 +160,7 @@ Grenadines", "Venezuela", "Virgin Islands, British", "Virgin Islands, U.S.",
 "Vietnam", "Vanuatu", "Wallis and Futuna", "Samoa", "Yemen", "Mayotte",
 "Yugoslavia", "South Africa", "Zambia", "Zaire", "Zimbabwe",
 "Anonymous Proxy","Satellite Provider","Other"
-);
+];
 
 define("GEOIP_COUNTRY_BEGIN", 16776960);
 define("GEOIP_STATE_BEGIN_REV0", 16700000);
@@ -399,7 +399,7 @@ function _geoip_seek_country($gi, $ipnum) {
         or die("fseek failed");
       $buf = fread($gi->filehandle, 2 * $gi->record_length);
     }
-    $x = array(0,0);
+    $x = [0,0];
     for ($i = 0; $i < 2; ++$i) {
       for ($j = 0; $j < $gi->record_length; ++$j) {
         $x[$i] += ord($buf[$gi->record_length * $i + $j]) << ($j * 8);
@@ -458,7 +458,7 @@ function _get_region($gi,$ipnum){
       $country_code = $GLOBALS['GEOIP_COUNTRY_CODES'][$seek_region];
       $region = "";
     }
-  return array ($country_code,$region);
+  return [$country_code,$region];
   }
   else if ($gi->databaseType == GEOIP_REGION_EDITION_REV1){
     $seek_region = _geoip_seek_country($gi,$ipnum) - GEOIP_STATE_BEGIN_REV1;
@@ -478,7 +478,7 @@ function _get_region($gi,$ipnum){
       $country_code = $GLOBALS['GEOIP_COUNTRY_CODES'][($seek_region - WORLD_OFFSET) / FIPS_RANGE];
       $region = "";
     }
-  return array ($country_code,$region);
+  return [$country_code,$region];
   }
 }
 
@@ -492,7 +492,7 @@ function geoip_region_by_addr ($gi,$addr) {
 
 function getdnsattributes ($l,$ip){
   $r = new Net_DNS_Resolver();
-  $r->nameservers = array("ws1.maxmind.com");
+  $r->nameservers = ["ws1.maxmind.com"];
   $p = $r->search($l."." . $ip .".s.maxmind.com","TXT","IN");
   $str = is_object($p->answer[0])?$p->answer[0]->string():'';
   ereg("\"(.*)\"",$str,$regs);

@@ -63,16 +63,16 @@ function getipbyhost($ip_host = "") {
 
 //connect to db
 try {
-	$mysql		= mysql_connect($config->db_host,$config->db_user,$config->db_pass);
+	$mysql		= new mysqli($config->db_host,$config->db_user,$config->db_pass);
 
 	try {
-		$enc = mysql_query("SET CHARACTER SET 'utf-8'");
-		$enc = mysql_query("SET NAMES 'utf8'");
+		$enc = $mysql->set_charset("utf8");
+		//$enc = $mysql->query("SET NAMES 'utf8'");
 	} catch (Exception $e) { }
 	
-	$resource	= mysql_select_db($config->db_db);
+	$resource	= $mysql->select_db($config->db_db);
 } catch (Exception $e) {
-	trigger_error(mysql_error());
+	trigger_error($mysql->connect_error);
 }
 
 $config->importdir		= $config->path_root."/tmp";
@@ -88,24 +88,26 @@ if(!$_SESSION["lang"]) $_SESSION["lang"]=$config->default_lang;
 
 //load smilies to global array
 if(empty($smilies)) {
-	$sql = mysql_query("SELECT code, url, name FROM ".$config->db_prefix."_smilies ORDER BY id");
-	while (list($code, $url, $name) = mysql_fetch_array($sql))
+	$result = $mysql->query("SELECT code, url, name FROM ".$config->db_prefix."_smilies ORDER BY id");
+	while (list($code, $url, $name) = $result->fetch_array(MYSQLI_BOTH))
 	{
 		$name = stripslashes($name);
 		$name = htmlentities($name);
-		$smilies[]=array($code,$url,$name);
+		$smilies[]=[$code,$url,$name];
 	}
+	$result->close();
 }
 
 //load bbcode tags to global array
 if(empty($bbcodes)) {
-	$sql = mysql_query("SELECT open_tag, close_tag, url, name FROM ".$config->db_prefix."_bbcode ORDER BY id");
-	while (list($open_tag, $close_tag, $url, $name) = mysql_fetch_array($sql))
+	$result = $mysql->query("SELECT open_tag, close_tag, url, name FROM ".$config->db_prefix."_bbcode ORDER BY id");
+	while (list($open_tag, $close_tag, $url, $name) = $result->fetch_array(MYSQLI_BOTH))
 	{
 		$name = stripslashes($name);
 		$name = htmlentities($name);
-		$bbcodes[]=array($open_tag,$close_tag,$url,$name);
+		$bbcodes[]=[$open_tag,$close_tag,$url,$name];
 	}
+	$result->close();
 }
 
 /* Smarty settings */
