@@ -22,7 +22,7 @@
 
 // sql functions
 
-function sql_set_websettings() {
+function sql_set_websettings($mysql) {
 	global $config;
 	$query = $mysql->query("SELECT * FROM `".$config->db_prefix."_webconfig`") or die ($mysql->error);
 	$result = $query->fetch_object();

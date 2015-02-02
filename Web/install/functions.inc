@@ -54,7 +54,7 @@ function is__writable($path) {
         unlink($path);
     return true;
 }
-function sql_get_privilege() {
+function sql_get_privilege($mysql) {
 	$privileges=array();
 	//global privileges
 	$query=$mysql->query("SHOW GRANTS FOR CURRENT_USER()")	or die ($mysql->error);
@@ -80,27 +80,24 @@ function sql_get_privilege() {
 }
 function sql_connect() {
 	global $msg;
-	$mysql=new @mysqli($_SESSION["dbhost"],$_SESSION["dbuser"],$_SESSION["dbpass"]) or $msg="_CANTCONNECT";
-	if(!$msg) $ressource=@$mysql->select_db($_SESSION["dbdb"]) or $msg="_CANTSELECTDB";
-	if($msg) return false;
-	return true;
+	$mysql=new mysqli($_SESSION["dbhost"],$_SESSION["dbuser"],$_SESSION["dbpass"]) or $msg="_CANTCONNECT";
+	if(!$msg) $ressource=$mysql->select_db($_SESSION["dbdb"]) or $msg="_CANTSELECTDB";
+	if($msg) return NULL;
+	return $mysql;
 }
-function sql_create_table($table,$structure) {
-	$query=@$mysql->query("CREATE TABLE `".$table."` (".$structure.") DEFAULT CHARSET=utf8");
+function sql_create_table($mysql,$table,$structure) {
+	$query=$mysql->query("CREATE TABLE `".$table."` (".$structure.") DEFAULT CHARSET=utf8");
 		if(!$query) return ("_ALREADYEXISTS");
-	$query->close();
 	return ("_CREATED");
 }
-function sql_insert_data($table,$data) {
-	$query=@$mysql->query("INSERT INTO `".$table."` ".$data);
+function sql_insert_data($mysql,$table,$data) {
+	$query=$mysql->query("INSERT INTO `".$table."` ".$data);
 		if(!$query) return ("_FAILED");
-	$query->close();
 	return ("_INSERTED");
 }
-function sql_insert_setting($sqlquery) {
-	$query=@$mysql->query($sqlquery);
+function sql_insert_setting($mysql,$sqlquery) {
+	$query=$mysql->query($sqlquery);
 		if(!$query) return ("_FAILED");
-	$query->close();
 	return ("_INSERTED");
 }
 function write_cfg_file($file,$content) {

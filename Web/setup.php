@@ -179,12 +179,12 @@ if($sitenr==4 && isset($_POST["check4"])) {
 		$mysql->set_charset("utf8");
 		//$enc = @mysql_query("SET CHARACTER SET 'utf-8'");
 		//$enc = @mysql_query("SET NAMES 'utf8'");
-		$ressource=@$mysql->select_db($dbdb) or $msg="_CANTSELECTDB";
+		$ressource=$mysql->select_db($dbdb) or $msg="_CANTSELECTDB";
 	}
 	
 	//get user privileges
 	if(!$msg) {
-		$previleges=sql_get_privilege();
+		$previleges=sql_get_privilege($mysql);
 		$prev[]=["name"=>"SELECT","value"=>in_array("SELECT",$previleges)];
 		$prev[]=["name"=>"INSERT","value"=>in_array("INSERT",$previleges)];
 		$prev[]=["name"=>"UPDATE","value"=>in_array("UPDATE",$previleges)];
@@ -197,17 +197,16 @@ if($sitenr==4 && isset($_POST["check4"])) {
 	}
 	//check for existing tables
 	if(!$msg) {
-		$ressource=@$mysql->select_db($dbdb);
+		$ressource=$mysql->select_db($dbdb);
 		//search for existing dbprefix
-		$query = @$mysql->query("SHOW TABLES FROM `".$dbdb."` LIKE '".$dbprefix."\_%'");
+		$query = $mysql->query("SHOW TABLES FROM `".$dbdb."` LIKE '".$dbprefix."\_%'");
 		if($query->num_rows) {
 			$prefix_exists=true;
 			//search for field "imported" in bans table, added since 6.0
-			$query2 = @$mysqli->query("SHOW COLUMNS FROM `".$dbprefix."_bans` WHERE Field LIKE 'imported'");
-			if($query2->num_rows) {
+			$query2 = $mysqli->query("SHOW COLUMNS FROM `".$dbprefix."_bans` WHERE Field LIKE 'imported'");
+			if($query2) {
 				$prefix_isnew=true;
 			}
-			$query2->close();
 		}
 		$query->close();
 	}
@@ -277,32 +276,32 @@ if($sitenr==6) $smarty->assign("checkvalue","_STEP7");
 /////////////// site 7 end /////////////////
 if($sitenr==7 && $_SESSION["dbcheck"]==true && $_SESSION["admincheck"]==true && !isset($_POST["check7"])) {
 	
-	if(sql_connect()) {
+	if($mysql = sql_connect()) {
 		//get tables structure
 		include("install/tables.inc");
 		//create db structure
 		foreach($table_create as $k => $v) {
-			$table=["table"=>$k,"success"=>sql_create_table($k,$v)];
+			$table=["table"=>$k,"success"=>sql_create_table($mysql,$k,$v)];
 			$tables[]=$table;
 		}
 		//get default data
 		include("install/datas.inc");
 		//create default data
 		foreach($data_create as $k => $v) {
-			$data=["data"=>$k,"success"=>sql_insert_data($k,$v)];
+			$data=["data"=>$k,"success"=>sql_insert_data($mysql,$k,$v)];
 			$datas[]=$data;
 		}
 		//create default websettings
-		$websettings_create=["data"=>"_CREATEWEBSETTINGS","success"=>sql_insert_setting($websettings_query)];
+		$websettings_create=["data"=>"_CREATEWEBSETTINGS","success"=>sql_insert_setting($mysql,$websettings_query)];
 		//create default usermenu
-		$usermenu_create=["data"=>"_CREATEUSERMENU","success"=>sql_insert_setting($usermenu_query)];
+		$usermenu_create=["data"=>"_CREATEUSERMENU","success"=>sql_insert_setting($mysql,$usermenu_query)];
 		//create webadmin userlevel
-		$webadmin_create[]=["data"=>"_CREATEUSERLEVEL","success"=>sql_insert_setting($userlevel_query)];
+		$webadmin_create[]=["data"=>"_CREATEUSERLEVEL","success"=>sql_insert_setting($mysql,$userlevel_query)];
 		//create webadmin
-		$webadmin_create[]=["data"=>"_CREATEWEBADMIN","success"=>sql_insert_setting($webadmin_query)];
+		$webadmin_create[]=["data"=>"_CREATEWEBADMIN","success"=>sql_insert_setting($mysql,$webadmin_query)];
 		//install default modules
 		foreach($modules_install as $k => $v) {
-			$modul=["name"=>$k,"success"=>sql_insert_setting($v)];
+			$modul=["name"=>$k,"success"=>sql_insert_setting($mysql,$v)];
 			$modules[]=$modul;
 		}
 		
@@ -322,7 +321,7 @@ $content="<?php
 		$msg=write_cfg_file($config->path_root."/include/db.config.inc.php",$content);
 		$smarty->assign("content",$content);
 		//create first log ;-)
-		sql_insert_setting($log_query);
+		sql_insert_setting($mysql,$log_query);
 	}
 	$smarty->assign("tables",$tables);
 	$smarty->assign("datas",$datas);

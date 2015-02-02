@@ -81,7 +81,7 @@ $config->langfilesdir	= $config->path_root."/language/";
 
 
 //get websettings
-$vars=sql_set_websettings();
+$vars=sql_set_websettings($mysql);
 
 //save current language to session
 if(!$_SESSION["lang"]) $_SESSION["lang"]=$config->default_lang;
