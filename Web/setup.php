@@ -174,9 +174,9 @@ if($sitenr==4 && isset($_POST["check4"])) {
 		$msg="_NOREQUIREDFIELDS";
 	}
 	
-	$mysql=new @mysqli($dbhost,$dbuser,$dbpass) or $msg="_CANTCONNECT";
+	$mysql=new mysqli($dbhost,$dbuser,$dbpass) or $msg="_CANTCONNECT";
 	if(!$msg) {
-		$mysql->set_charset("urf8");
+		$mysql->set_charset("utf8");
 		//$enc = @mysql_query("SET CHARACTER SET 'utf-8'");
 		//$enc = @mysql_query("SET NAMES 'utf8'");
 		$ressource=@$mysql->select_db($dbdb) or $msg="_CANTSELECTDB";
