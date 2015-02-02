@@ -30,7 +30,7 @@ session_start();
 require_once("install/functions.inc");
 require_once("include/functions.inc.php");
 
-$config->v_web = "6.0.3";
+$config->v_web = "0.0.4-alpha";
 
 
 //installation are 6 sites
@@ -246,7 +246,7 @@ if($sitenr==5 && isset($_POST["check5"])) {
 	$_SESSION["adminpass"]="";
 	$_SESSION["adminpass2"]="";
 	
-	$smarty->assign("admin",array($adminuser,$adminemail));
+	$smarty->assign("admin",[$adminuser,$adminemail]);
 	
 	if(strlen($adminuser) < 4) $validate[]="_USERTOSHORT";
 	if(strlen($adminpass) < 4) $validate[]="_PWTOSHORT";
