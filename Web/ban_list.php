@@ -25,11 +25,11 @@ require_once("include/functions.inc.php");
 
 /***** GeoIP 2 *****/
 require_once("include/geoip2/autoload.php");
+
+use MaxMind\Db\Reader;
 /******************/
 
 require_once("include/thumbs.inc.php");
-
-use MaxMind\Db\Reader;
 
 // Template generieren
 $title = "_TITLEBANLIST";
