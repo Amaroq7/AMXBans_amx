@@ -22,10 +22,14 @@ require_once("include/steam.inc.php");
 require_once("include/sql.inc.php");
 require_once("include/logfunc.inc.php");
 require_once("include/functions.inc.php");
-if (!function_exists('geoip_country_code_by_addr')) {
-        require_once("include/geoip.inc");
-}
+
+/***** GeoIP 2 *****/
+require_once("include/geoip2/autoload.php");
+/******************/
+
 require_once("include/thumbs.inc.php");
+
+use MaxMind\Db\Reader;
 
 // Template generieren
 $title = "_TITLEBANLIST";
@@ -91,7 +95,11 @@ if(!$user_site) {
 		$gi="";
         $cc="";
         $cn="";
-		$gi = geoip_open($config->path_root."/include/GeoIP.dat",GEOIP_STANDARD);
+
+	/***** GeoIP 2 *****/
+	$reader = new Reader('include/geoip2/GeoLite2-Country.mmdb');
+	/******************/
+
         while($result = $query->fetch_object()) {
                 if($result->expired==1) continue;
                 $steamid="";
@@ -101,8 +109,11 @@ if(!$user_site) {
                         $steamcomid = GetFriendId($steamid);
                 }
                 if(!empty($result->player_ip)) {
-                        $cc = geoip_country_code_by_addr($gi, $result->player_ip);
-                        $cn = geoip_country_name_by_addr($gi, $result->player_ip);
+			/***** GeoIP 2 *****/
+			$record = $reader->get($result->player_ip);
+			$cc = $record["country"]["iso_code"];
+			$cn = $record["country"]["names"]["en"];
+			/******************/
                 }
                 $ban_row=[
                         "bid"       => $result->bid,
@@ -168,7 +179,11 @@ if(!$user_site) {
                 $ban_list[]=$ban_row;
         }
 	$query->close();
-        geoip_close($gi);
+
+	/***** GeoIP 2 *****/
+	$reader->close();
+	/*******************/
+
         $smarty->assign("ban_list",$ban_list);
         $smarty->assign("ban_page",$ban_page);
 }
@@ -214,7 +229,7 @@ $smarty->assign("bbcodes",$bbcodes);
 $smarty->assign("menu",$menu);
 $smarty->assign("banner",$config->banner);
 $smarty->assign("banner_url",$config->banner_url);
-$smarty->assign("pagenav", construct_vb_page_nav($ban_page->current, $ban_page->max_page, 3, [10, 50, 100, 500, 1000]));
+$smarty->assign("pagenav", construct_vb_page_nav($ban_page["current"], $ban_page["max_page"], 3, [10, 50, 100, 500, 1000]));
 $smarty->display('main_header.tpl');
 //load main page, currently ban list or ban details/edit
 if($user_site !== "") {
