@@ -20,7 +20,12 @@
 
 */
 	require_once("include/rcon_hl_net.inc");
-	require_once("include/geoip.inc");
+
+	/***** GeoIP 2 *****/
+	require_once("include/geoip2/autoload.php");
+
+	use MaxMind\Db\Reader;
+	/******************/
 	
 	if(!$_SESSION["loggedin"]) {
 		header("Location:index.php");
@@ -176,10 +181,13 @@
 						$pl=explode("\xFC",$v);
 						if(!is_array($pl)) break;
 						
-						$gi = geoip_open("include/GeoIP.dat",GEOIP_STANDARD);
-						$cc = geoip_country_code_by_addr($gi, $pl[3]);
-						$cn = geoip_country_name_by_addr($gi, $pl[3]);
-						geoip_close($gi);
+						/***** GeoIP 2 *****/
+						$reader = new Reader('include/geoip2/GeoLite2-Country.mmdb');
+						$record = $reader->get($pl[3]);
+						$cc = $record["country"]["iso_code"];
+						$cn = $record["country"]["names"]["en"];
+						$reader->close();
+						/***** GeoIP 2 *****/
 						switch ($pl[4]) {
 							case 0:
 								$statusname="_PLAYER";break;
