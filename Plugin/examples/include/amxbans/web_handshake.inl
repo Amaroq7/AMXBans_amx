@@ -31,7 +31,7 @@ public cmdLst(id,level,cid)
 			immun=0
 			if(get_user_flags(pid) & ADMIN_IMMUNITY) immun=1
 			
-			server_print("%s %d %s %s %d %d",name,userid,authid,ip,status,immun)
+			console_print(id, "%s%c%d%c%s%c%s%c%d%c%d", name, -4, userid, -4, authid, -4, ip, -4, status, -4, immun);
 		}
 	}
 	return PLUGIN_HANDLED
