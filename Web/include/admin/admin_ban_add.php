@@ -31,7 +31,7 @@
 	//save ban
 	if(isset($_POST["save"]) && $_SESSION["loggedin"]) {
 		if(isset($_POST["reasoncheck"])=="yes") {
-			$reason=mysql_real_escape_string(trim($_POST["user_reason"]));
+			$reason=$mysql->escape_string(trim($_POST["user_reason"]));
 			$reason_custom=1;
 		} else {
 			$reason=$_POST["ban_reason"];

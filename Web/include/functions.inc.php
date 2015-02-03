@@ -19,6 +19,7 @@
 	If not, see <http://creativecommons.org/licenses/by-nc-sa/2.0/>.
 
 */
+require_once("include/config.inc.php");
 
 function check_size($value,$minsize,$maxsize,$prefixlang) {
 	if(!$value && $minsize) {
@@ -78,6 +79,7 @@ function validate_value($value,$type = "name",&$msg = "",$minsize=1,$maxsize=31,
 
 }
 function sql_safe($value) {
+	global $mysql;
 	if (get_magic_quotes_gpc()) $value=stripslashes_recursive($value); //function in config.inc.php
 	return $mysql->escape_string($value);
 }

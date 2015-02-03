@@ -21,6 +21,7 @@
 */
 
 // setting version - DO NOT EDIT THIS
+$config = new stdClass();
 $config->v_web = "0.0.4-alpha";
 
 // if necessary - calling install procedure

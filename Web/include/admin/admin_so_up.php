@@ -24,6 +24,11 @@ if(!$_SESSION["loggedin"]) {
 	header("Location:index.php");
 }
 
+//Just for now, becuase there isn't any db at the moment to check if there is a new update for amxbans
+header("Location:admin.php");
+
+/*
+
 $admin_site="up";
 $title2 ="_TITLEUPDATE";
 
@@ -31,7 +36,6 @@ $update_ip="amxbans.de";
 $update_user="amxbans_vcheck";
 $update_pw="";
 $update_db="amxbans_version";
-
 
 //get version from servers
 $query=$mysql->query("SELECT `address`,`amxban_version` FROM `".$config->db_prefix."_serverinfo` ORDER BY `address`") or die($mysql->error);
@@ -84,4 +88,4 @@ if($mysql_upd) {
 	$mysql_upd->close();
 }
 $smarty->assign("error",$error);
-?>
+?>*/

@@ -189,7 +189,7 @@ if(isset($_POST["del_demo_x"]) && isset($_POST["did"]) && $_SESSION["loggedin"])
 		$query->data_seek(0);
 		$row = $query->fetch_row();
 
-		$file=$row[0]
+		$file=$row[0];
 	}
 	$query->close();
 	//delete thumb if exists

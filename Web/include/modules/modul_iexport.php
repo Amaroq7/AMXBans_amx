@@ -230,7 +230,7 @@ if(isset($_POST["bandbcheck"]) && $_SESSION["loggedin"]) {
 	$dbdata["onlyperm"]=(isset($_POST["onlyperm"]))?true:false;
 	$dbdata["dellocal"]=(isset($_POST["dellocal"]))?true:false;
 	//connect to db
-	$mysql2 = new @mysqli($dbdata["host"],$dbdata["user"],$dbdata["pass"]) or $user_msg="_DBLOGINFAILED";
+	$mysql2 = new mysqli($dbdata["host"],$dbdata["user"],$dbdata["pass"]) or $user_msg="_DBLOGINFAILED";
 	if(!$user_msg) $resource2 = @$mysql2->select_db($dbdata["database"]) or $user_msg="_DBSELECTDBFAILED";
 	if(!$user_msg) $query2 = @$mysql2->query("SELECT * FROM `".$dbdata["table"]."` WHERE `ban_length`=0") or $user_msg="_TABLESSELECTFAILED";
 	if(!$user_msg) {
@@ -257,7 +257,7 @@ if(isset($_POST["bandbimp"]) && $_SESSION["loggedin"]) {
 	$dbdata["onlyperm"]=$onlyperm;
 	$dbdata["dellocal"]=$dellocal;
 	//connect to db for import
-	$mysql2 = new @mysqli($dbdata["host"],$dbdata["user"],$dbdata["pass"]) or $user_msg="_DBLOGINFAILED";
+	$mysql2 = new mysqli($dbdata["host"],$dbdata["user"],$dbdata["pass"]) or $user_msg="_DBLOGINFAILED";
 	//select the database for import
 	if(!$user_msg) $resource2 = @$mysql2->select_db($dbdata["database"]) or $user_msg="_DBSELECTDBFAILED";
 	//get all bans from table for import

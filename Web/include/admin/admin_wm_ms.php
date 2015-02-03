@@ -86,7 +86,7 @@
 		$update_query.=",`file_type`='".($mysql->escape_string($_POST["file_type"]))."'";
 		
 		//save it to db
-		mysql_query("UPDATE `".$config->db_prefix."_webconfig` SET ".$update_query." WHERE `id`=1 LIMIT 1") or die ($mysql->error);
+		$mysql->query("UPDATE `".$config->db_prefix."_webconfig` SET ".$update_query." WHERE `id`=1 LIMIT 1") or die ($mysql->error);
 		$user_msg="_CONFIGSAVED";
 		log_to_db("Websetting config","Changed");
 		

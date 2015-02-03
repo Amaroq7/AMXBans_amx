@@ -20,6 +20,9 @@
 
 */
 
+//require_once("include/config.inc.php");
+//global $mysql;
+
 //get usermenu from db
 $menu=array();
 $query = $mysql->query("SELECT * FROM `".$config->db_prefix."_usermenu` WHERE `activ`=1 ORDER BY `pos` ASC") or die ($mysql->error);

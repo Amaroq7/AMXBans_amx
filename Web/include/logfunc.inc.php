@@ -19,9 +19,13 @@
 	If not, see <http://creativecommons.org/licenses/by-nc-sa/2.0/>.
 
 */
+
+//require_once("include/config.inc.php");
+
 function log_to_db($action,$remarks) {
 	global $config;
-	$query = $mysql->query("INSERT INTO `".$config->db_prefix."_logs` (
+	global $mysql;
+	$mysql->query("INSERT INTO `".$config->db_prefix."_logs` (
 			`id` ,
 			`timestamp` ,
 			`ip` ,
@@ -34,5 +38,4 @@ function log_to_db($action,$remarks) {
 			);
 		") or die ($mysql->error);
 }
-$query->close();
 ?>

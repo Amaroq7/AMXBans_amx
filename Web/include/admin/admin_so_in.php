@@ -19,7 +19,6 @@
 	If not, see <http://creativecommons.org/licenses/by-nc-sa/2.0/>.
 
 */
-	
 	if(!$_SESSION["loggedin"]) {
 		header("Location:index.php");
 	}
@@ -73,7 +72,7 @@
 
 		return $val;
 	}
-	@$gd=gd_info();
+	$gd=gd_info();
 	$gd_version=$gd["GD Version"];
 	$php_settings=[
 			"display_errors"=>(ini_get('display_errors')=="")?"off":ini_get('display_errors'),
@@ -109,8 +108,9 @@
 		$repaired=sql_get_comments_count_fail(1);
 	}
 	function db_size($name,$prefix) { 
-		$sql = "SHOW TABLE STATUS FROM `" . $name. "` LIKE '".$prefix."_%'"; 
-		if($query = @$mysql->query($sql)) { 
+		$sql = "SHOW TABLE STATUS FROM `" . $name. "` LIKE '".$prefix."_%'";
+		global $mysql;
+		if($query = $mysql->query($sql)) { 
 			while($result = $query->fetch_array(MYSQLI_BOTH)) {
 				$tabledata[] = $result; 
 			}
